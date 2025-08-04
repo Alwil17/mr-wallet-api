@@ -1,0 +1,61 @@
+---
+config:
+  theme: neo
+---
+classDiagram
+    class User {
+        UUID id
+        string name
+        string email
+        string password_hash
+        DateTime created_at
+    }
+    class Wallet {
+        UUID id
+        string name
+        string type
+        Decimal balance
+        UUID user_id
+        DateTime created_at
+    }
+    class Transaction {
+        UUID id
+        string type  // income or expense
+        Decimal amount
+        string category
+        string note
+        DateTime date
+        UUID wallet_id
+        DateTime created_at
+    }
+    class File {
+        UUID id
+        string filename
+        string url
+        string file_type  // image/pdf/...
+        UUID transaction_id
+        DateTime uploaded_at
+    }
+    class Debt {
+        UUID id
+        Decimal amount
+        string borrower
+        string type  // owed or given
+        bool is_paid
+        DateTime due_date
+        UUID wallet_id
+        DateTime created_at
+    }
+    class Transfer {
+        UUID id
+        Decimal amount
+        UUID source_wallet_id
+        UUID target_wallet_id
+        DateTime created_at
+    }
+    User "1" --> "many" Wallet
+    Wallet "1" --> "many" Transaction
+    Wallet "1" --> "many" Debt
+    Wallet "1" --> "many" Transfer : as source
+    Wallet "1" --> "many" Transfer : as target
+    Transaction "1" --> "many" File
