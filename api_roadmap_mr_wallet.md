@@ -5,23 +5,23 @@
 ## ✅ Phase 1 — Project Foundation & Setup
 **Status: COMPLETED**
 
-- ✅ Initialize FastAPI project structure
-- ✅ Python environment setup (Poetry/virtualenv)
-- ✅ Docker + docker-compose configuration (FastAPI + PostgreSQL)
-- ✅ Environment configuration (Pydantic + `.env`)
-- ✅ Automatic documentation setup (Swagger/OpenAPI)
-- ✅ Alembic integration for database migrations
-- ✅ Database schema design and models
+- [x] Initialize FastAPI project structure
+- [x] Python environment setup (Poetry/virtualenv)
+- [x] Docker + docker-compose configuration (FastAPI + PostgreSQL)
+- [x] Environment configuration (Pydantic + `.env`)
+- [x] Automatic documentation setup (Swagger/OpenAPI)
+- [x] Alembic integration for database migrations
+- [x] Database schema design and models
 
 ## ✅ Phase 2 — User Authentication & Management
 **Status: COMPLETED**
 
-- ✅ `User` model implementation
-- ✅ Authentication routes: `POST /auth/register`, `POST /auth/login`
-- ✅ JWT token management (OAuth2 with PasswordBearer)
-- ✅ User profile endpoints: `GET /users/me`, `PATCH /users/me`
-- ✅ Authentication middleware for protected routes
-- ✅ Password hashing and validation
+- [x] `User` model implementation
+- [x] Authentication routes: `POST /auth/register`, `POST /auth/login`
+- [x] JWT token management (OAuth2 with PasswordBearer)
+- [x] User profile endpoints: `GET /users/me`, `PATCH /users/me`
+- [x] Authentication middleware for protected routes
+- [x] Password hashing and validation
 
 ## ✅ Phase 3 — Wallet Management
 **Status: COMPLETED**
