@@ -113,9 +113,9 @@ def get_transaction_summary(
     if transaction_type:
         filters.type = transaction_type
     if date_from:
-        filters.date_from = date_from
+        filters.start_date = date_from
     if date_to:
-        filters.date_to = date_to
+        filters.end_date = date_to
 
     service = TransactionService(db)
     return service.get_transaction_summary(current_user.id, filters)
