@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from decimal import Decimal
+import math
 
 
 class TestWallets:
@@ -82,10 +83,13 @@ class TestWallets:
         
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, list)
+        assert isinstance(data, dict)
+        assert "wallets" in data
+        assert "total" in data
+        assert isinstance(data["wallets"], list)
         # Note: multiple_wallets fixture may not work with user_auth fixture
         # because they use different users, so let's just check structure
-        assert len(data) >= 0
+        assert len(data["wallets"]) == 0
 
     def test_get_user_wallets_unauthorized(self, client: TestClient):
         """Test getting wallets without authentication"""
@@ -163,7 +167,7 @@ class TestWallets:
         data = response.json()
         assert data["name"] == update_data["name"]
         assert data["type"] == update_data["type"]
-        assert float(data["balance"]) == 1000.00  # Balance unchanged
+        assert math.isclose(float(data["balance"]), 1000.00, rel_tol=1e-9)  # Balance unchanged
 
     def test_update_wallet_not_found(self, client: TestClient, user_auth):
         """Test updating non-existent wallet"""
@@ -254,7 +258,7 @@ class TestWallets:
         
         assert response.status_code == 200
         data = response.json()
-        assert float(data["balance"]) == 1500.00
+        assert math.isclose(float(data["balance"]), 1500.00, rel_tol=1e-9)
 
     def test_credit_wallet_invalid_amount(self, client: TestClient, user_auth):
         """Test crediting wallet with invalid amount"""
@@ -310,7 +314,7 @@ class TestWallets:
         
         assert response.status_code == 200
         data = response.json()
-        assert float(data["balance"]) == 700.00
+        assert math.isclose(float(data["balance"]), 700.00, rel_tol=1e-9)
 
     def test_debit_wallet_insufficient_funds(self, client: TestClient, user_auth):
         """Test debiting wallet with insufficient funds"""
@@ -338,7 +342,7 @@ class TestWallets:
         )
         
         assert response.status_code == 400
-        assert "insufficient funds" in response.json()["detail"].lower()
+        assert "insufficient balance for this operation" in response.json()["detail"].lower()
 
     def test_debit_credit_wallet_overdraft(self, client: TestClient, user_auth):
         """Test debiting credit wallet (overdraft allowed)"""
@@ -393,7 +397,7 @@ class TestWallets:
         
         assert response.status_code == 200
         data = response.json()
-        assert float(data["balance"]) == 2500.50
+        assert math.isclose(float(data["balance"]), 2500.50, rel_tol=1e-9)
         assert data["wallet_name"] == "Balance Test"
 
     def test_wallet_operations_unauthorized(self, client: TestClient):
