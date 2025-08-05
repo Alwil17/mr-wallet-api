@@ -8,7 +8,7 @@ from app.schemas.transfer_dto import (
     TransferListResponse,
     TransferSummaryResponse,
     TransferFilterDTO,
-    WalletTransferSummaryDTO
+    WalletTransferSummaryDTO,
 )
 
 TRANSFER_NOT_FOUND = "Transfer not found"
@@ -20,7 +20,9 @@ class TransferService:
     def __init__(self, db: Session):
         self.repository = TransferRepository(db)
 
-    def create_transfer(self, transfer_data: TransferCreateDTO, user_id: int) -> Transfer:
+    def create_transfer(
+        self, transfer_data: TransferCreateDTO, user_id: int
+    ) -> Transfer:
         """
         Create a new transfer between wallets
 
@@ -52,8 +54,13 @@ class TransferService:
         """
         return self.repository.get_by_id_and_user(transfer_id, user_id)
 
-    def get_user_transfers(self, user_id: int, filters: Optional[TransferFilterDTO] = None, 
-                          skip: int = 0, limit: int = 100) -> TransferListResponse:
+    def get_user_transfers(
+        self,
+        user_id: int,
+        filters: Optional[TransferFilterDTO] = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> TransferListResponse:
         """
         Get user's transfers with optional filtering
 
@@ -68,21 +75,24 @@ class TransferService:
         """
         transfers = self.repository.get_user_transfers(user_id, filters, skip, limit)
         total = self.repository.count_user_transfers(user_id, filters)
-        
+
         # Enrich transfer responses with wallet names
         transfer_responses = []
         for transfer in transfers:
             response = TransferResponse.model_validate(transfer)
-            response.source_wallet_name = transfer.source_wallet.name if transfer.source_wallet else None
-            response.target_wallet_name = transfer.target_wallet.name if transfer.target_wallet else None
+            response.source_wallet_name = (
+                transfer.source_wallet.name if transfer.source_wallet else None
+            )
+            response.target_wallet_name = (
+                transfer.target_wallet.name if transfer.target_wallet else None
+            )
             transfer_responses.append(response)
-        
-        return TransferListResponse(
-            transfers=transfer_responses,
-            total=total
-        )
 
-    def get_wallet_transfers(self, wallet_id: int, user_id: int) -> List[TransferResponse]:
+        return TransferListResponse(transfers=transfer_responses, total=total)
+
+    def get_wallet_transfers(
+        self, wallet_id: int, user_id: int
+    ) -> List[TransferResponse]:
         """
         Get all transfers for a specific wallet
 
@@ -98,14 +108,18 @@ class TransferService:
         """
         try:
             transfers = self.repository.get_wallet_transfers(wallet_id, user_id)
-            
+
             transfer_responses = []
             for transfer in transfers:
                 response = TransferResponse.model_validate(transfer)
-                response.source_wallet_name = transfer.source_wallet.name if transfer.source_wallet else None
-                response.target_wallet_name = transfer.target_wallet.name if transfer.target_wallet else None
+                response.source_wallet_name = (
+                    transfer.source_wallet.name if transfer.source_wallet else None
+                )
+                response.target_wallet_name = (
+                    transfer.target_wallet.name if transfer.target_wallet else None
+                )
                 transfer_responses.append(response)
-            
+
             return transfer_responses
         except ValueError as e:
             raise ValueError(str(e))
@@ -140,23 +154,29 @@ class TransferService:
             TransferSummaryResponse: Summary of user's transfers
         """
         summary_data = self.repository.get_user_transfer_summary(user_id)
-        
+
         # Convert recent transfers to response format
         recent_transfer_responses = []
         for transfer in summary_data["recent_transfers"]:
             response = TransferResponse.model_validate(transfer)
-            response.source_wallet_name = transfer.source_wallet.name if transfer.source_wallet else None
-            response.target_wallet_name = transfer.target_wallet.name if transfer.target_wallet else None
+            response.source_wallet_name = (
+                transfer.source_wallet.name if transfer.source_wallet else None
+            )
+            response.target_wallet_name = (
+                transfer.target_wallet.name if transfer.target_wallet else None
+            )
             recent_transfer_responses.append(response)
-        
+
         return TransferSummaryResponse(
             total_transfers=summary_data["total_transfers"],
             total_amount_transferred=summary_data["total_amount_transferred"],
             transfers_by_wallet=summary_data["transfers_by_wallet"],
-            recent_transfers=recent_transfer_responses
+            recent_transfers=recent_transfer_responses,
         )
 
-    def get_wallet_transfer_summary(self, wallet_id: int, user_id: int) -> WalletTransferSummaryDTO:
+    def get_wallet_transfer_summary(
+        self, wallet_id: int, user_id: int
+    ) -> WalletTransferSummaryDTO:
         """
         Get transfer summary for a specific wallet
 
@@ -172,29 +192,41 @@ class TransferService:
         """
         try:
             transfers = self.repository.get_wallet_transfers(wallet_id, user_id)
-            
+
             # Get wallet info
-            wallet = transfers[0].source_wallet if transfers and transfers[0].source_wallet_id == wallet_id else None
+            wallet = (
+                transfers[0].source_wallet
+                if transfers and transfers[0].source_wallet_id == wallet_id
+                else None
+            )
             if not wallet and transfers:
-                wallet = transfers[0].target_wallet if transfers[0].target_wallet_id == wallet_id else None
-            
+                wallet = (
+                    transfers[0].target_wallet
+                    if transfers[0].target_wallet_id == wallet_id
+                    else None
+                )
+
             if not wallet:
                 raise ValueError("Wallet not found")
-            
+
             # Calculate summary
-            total_sent = sum(t.amount for t in transfers if t.source_wallet_id == wallet_id)
-            total_received = sum(t.amount for t in transfers if t.target_wallet_id == wallet_id)
+            total_sent = sum(
+                t.amount for t in transfers if t.source_wallet_id == wallet_id
+            )
+            total_received = sum(
+                t.amount for t in transfers if t.target_wallet_id == wallet_id
+            )
             net_amount = total_received - total_sent
             transfer_count = len(transfers)
-            
+
             return WalletTransferSummaryDTO(
                 wallet_id=wallet_id,
                 wallet_name=wallet.name,
                 total_sent=total_sent,
                 total_received=total_received,
                 net_amount=net_amount,
-                transfer_count=transfer_count
+                transfer_count=transfer_count,
             )
-            
+
         except ValueError as e:
             raise ValueError(str(e))

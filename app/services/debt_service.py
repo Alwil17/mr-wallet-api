@@ -9,7 +9,7 @@ from app.schemas.debt_dto import (
     DebtListResponse,
     DebtSummaryResponse,
     DebtFilterDTO,
-    DebtMarkPaidDTO
+    DebtMarkPaidDTO,
 )
 
 DEBT_NOT_FOUND = "Debt not found"
@@ -52,8 +52,13 @@ class DebtService:
         """
         return self.repository.get_by_id_and_user(debt_id, user_id)
 
-    def get_user_debts(self, user_id: int, filters: Optional[DebtFilterDTO] = None, 
-                      skip: int = 0, limit: int = 100) -> DebtListResponse:
+    def get_user_debts(
+        self,
+        user_id: int,
+        filters: Optional[DebtFilterDTO] = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> DebtListResponse:
         """
         Get user's debts with optional filtering
 
@@ -68,13 +73,10 @@ class DebtService:
         """
         debts = self.repository.get_user_debts(user_id, filters, skip, limit)
         total = self.repository.count_user_debts(user_id, filters)
-        
+
         debt_responses = [DebtResponse.model_validate(debt) for debt in debts]
-        
-        return DebtListResponse(
-            debts=debt_responses,
-            total=total
-        )
+
+        return DebtListResponse(debts=debt_responses, total=total)
 
     def get_wallet_debts(self, wallet_id: int, user_id: int) -> List[DebtResponse]:
         """
@@ -96,7 +98,9 @@ class DebtService:
         except ValueError as e:
             raise ValueError(str(e))
 
-    def update_debt(self, debt_id: int, debt_data: DebtUpdateDTO, user_id: int) -> Optional[Debt]:
+    def update_debt(
+        self, debt_id: int, debt_data: DebtUpdateDTO, user_id: int
+    ) -> Optional[Debt]:
         """
         Update debt information
 
@@ -116,7 +120,9 @@ class DebtService:
         except ValueError as e:
             raise ValueError(str(e))
 
-    def mark_debt_as_paid(self, debt_id: int, payment_data: DebtMarkPaidDTO, user_id: int) -> Optional[Debt]:
+    def mark_debt_as_paid(
+        self, debt_id: int, payment_data: DebtMarkPaidDTO, user_id: int
+    ) -> Optional[Debt]:
         """
         Mark debt as paid or unpaid
 
@@ -166,7 +172,7 @@ class DebtService:
             DebtSummaryResponse: Summary of user's debts
         """
         summary_data = self.repository.get_user_debt_summary(user_id)
-        
+
         return DebtSummaryResponse(
             total_debts=summary_data["total_debts"],
             total_amount_owed=summary_data["total_amount_owed"],
@@ -175,5 +181,5 @@ class DebtService:
             paid_debts=summary_data["paid_debts"],
             unpaid_debts=summary_data["unpaid_debts"],
             overdue_debts=summary_data["overdue_debts"],
-            debts_by_type=summary_data["debts_by_type"]
+            debts_by_type=summary_data["debts_by_type"],
         )

@@ -158,10 +158,7 @@ class UserService:
 
         # Get all user transactions
         transaction_response = self.transaction_repository.get_user_transactions(
-            user_id=user_id, 
-            filters=None, 
-            skip=0, 
-            limit=10000
+            user_id=user_id, filters=None, skip=0, limit=10000
         )
         transaction_data = transaction_response.transactions
 
@@ -171,7 +168,9 @@ class UserService:
 
         # Get all user transfers
         transfers = self.transfer_repository.get_user_transfers(user_id, limit=1000)
-        transfer_data = [TransferResponse.model_validate(transfer) for transfer in transfers]
+        transfer_data = [
+            TransferResponse.model_validate(transfer) for transfer in transfers
+        ]
 
         return UserExportData(
             user_info=UserResponse.model_validate(user),
@@ -216,18 +215,17 @@ class UserService:
             # Since we have CASCADE constraints set up in the database,
             # deleting the user should automatically delete all related data
             # However, we need to handle files separately as they may have physical files on disk
-            
+
             # Get all user transactions to clean up their files
             transaction_response = self.transaction_repository.get_user_transactions(
-                user_id=user_id, 
-                filters=None, 
-                skip=0, 
-                limit=10000
+                user_id=user_id, filters=None, skip=0, limit=10000
             )
-            
+
             # Delete all transaction files (both database records and physical files)
             for transaction in transaction_response.transactions:
-                files = self.file_repository.get_transaction_files(transaction.id, user_id)
+                files = self.file_repository.get_transaction_files(
+                    transaction.id, user_id
+                )
                 for file in files:
                     self.file_repository.delete(file.id, user_id)
 
@@ -243,7 +241,7 @@ class UserService:
             return {
                 "message": "User account and all associated data has been permanently deleted",
                 "deleted_at": datetime.now().isoformat(),
-                "user_email": user.email
+                "user_email": user.email,
             }
 
         except Exception as e:
@@ -292,13 +290,10 @@ class UserService:
             # Anonymize user data
             anonymous_email = f"anonymous_{user_id}@deleted.local"
             anonymous_name = f"Anonymous User {user_id}"
-            
+
             # Update user with anonymized data
-            update_data = UserUpdateDTO(
-                name=anonymous_name,
-                email=anonymous_email
-            )
-            
+            update_data = UserUpdateDTO(name=anonymous_name, email=anonymous_email)
+
             updated_user = self.repository.update(user_id, update_data)
             if not updated_user:
                 raise ValueError("Failed to anonymize user data")
@@ -306,7 +301,7 @@ class UserService:
             return {
                 "message": "User data has been anonymized",
                 "anonymized_at": datetime.now().isoformat(),
-                "user_id": user_id
+                "user_id": user_id,
             }
 
         except Exception as e:
