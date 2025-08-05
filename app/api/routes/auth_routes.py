@@ -10,14 +10,15 @@ from app.schemas.user_dto import (
     UserExportData,
     AccountDeletionRequest,
 )
-from app.schemas.auth_dto import TokenResponse, RefreshTokenRequest
+from app.schemas.auth_dto import TokenResponse, RefreshTokenRequest, PasswordChangeRequest
 from app.services.user_service import UserService
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from app.core.security import (
     get_current_user,
     create_access_token,
     create_refresh_token,
-    verify_refresh_token
+    verify_refresh_token,
+    verify_password
 )
 from app.db.base import get_db
 from sqlalchemy.orm import Session
@@ -74,7 +75,7 @@ async def login_for_access_token(
     )
 
 
-@router.post("/refresh", response_model=TokenResponse)
+@router.post("/token/refresh", response_model=TokenResponse)
 async def refresh_token(token_data: RefreshTokenRequest, db: Session = Depends(get_db)):
     """
     Refresh access token using refresh token.
@@ -121,7 +122,7 @@ async def refresh_token(token_data: RefreshTokenRequest, db: Session = Depends(g
     )
 
 
-@router.post("/logout", status_code=204)
+@router.post("/logout")
 async def logout(token_data: RefreshTokenRequest, db: Session = Depends(get_db)):
     """
     Logout user by revoking refresh token.
@@ -130,6 +131,9 @@ async def logout(token_data: RefreshTokenRequest, db: Session = Depends(get_db))
         token_data (RefreshTokenRequest): The refresh token to revoke
         db (Session): Database session
 
+    Returns:
+        dict: Success message
+
     Raises:
         HTTPException: If refresh token is invalid
     """
@@ -137,6 +141,8 @@ async def logout(token_data: RefreshTokenRequest, db: Session = Depends(get_db))
     verify_refresh_token(token_data.refresh_token, db)
     token_repo = RefreshTokenRepository(db)
     token_repo.revoke(token_data.refresh_token)
+    
+    return {"message": "Successfully logged out"}
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
@@ -156,12 +162,6 @@ def register_user(user_data: UserCreateDTO, db: Session = Depends(get_db)):
     """
     user_service = UserService(db)
     try:
-        # For testing environments, allow creation of admins by email
-        if (settings.APP_ENV.lower() == "testing") and "admin" in user_data.email:
-            user_data.role = "admin"
-        else:
-            user_data.role = "user"  # Default role for normal users
-
         user = user_service.create_user(user_data)
         return UserResponse.model_validate(user)
     except ValueError as e:
@@ -171,7 +171,7 @@ def register_user(user_data: UserCreateDTO, db: Session = Depends(get_db)):
         )
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/profile", response_model=UserResponse)
 async def read_current_user(current_user: UserResponse = Depends(get_current_user)):
     """
     Get current authenticated user information.
@@ -185,7 +185,7 @@ async def read_current_user(current_user: UserResponse = Depends(get_current_use
     return current_user
 
 
-@router.put("/edit", response_model=UserResponse)
+@router.put("/profile", response_model=UserResponse)
 async def edit_current_user(
     update_data: UserUpdateDTO,
     db: Session = Depends(get_db),
@@ -217,8 +217,49 @@ async def edit_current_user(
     return UserResponse.model_validate(updated_user)
 
 
-@router.delete("/remove", status_code=204)
-async def remove_current_user(
+@router.put("/password")
+async def change_password(
+    password_data: PasswordChangeRequest,
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user),
+):
+    """
+    Change user password.
+
+    Args:
+        password_data (PasswordChangeRequest): The password change data  
+        db (Session): Database session
+        current_user (UserResponse): The current user from token
+
+    Returns:
+        dict: Success message
+
+    Raises:
+        HTTPException: If current password is incorrect
+    """
+    user_service = UserService(db)
+    
+    # Verify current password
+    user = user_service.get_user_by_id(current_user.id)
+    if not user or not verify_password(password_data.current_password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+    
+    # Update password
+    success = user_service.change_password(current_user.id, password_data.new_password)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=USER_NOT_FOUND
+        )
+    
+    return {"message": "Password updated successfully"}
+
+
+@router.delete("/account")
+async def delete_account(
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
@@ -228,6 +269,9 @@ async def remove_current_user(
     Args:
         db (Session): Database session
         current_user (UserResponse): The current user from token
+
+    Returns:
+        dict: Success message
 
     Raises:
         HTTPException: If deletion fails
@@ -240,9 +284,11 @@ async def remove_current_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=USER_NOT_FOUND
         )
+    
+    return {"message": "Account deleted successfully"}
 
 
-@router.get("/export-data", response_model=UserExportData)
+@router.get("/gdpr/data", response_model=UserExportData)
 async def export_user_data(
     current_user: UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -386,18 +432,22 @@ async def get_user_data_summary(
     Returns:
         dict: Data summary
     """
-    user_service = UserService(db)
+    from app.services.wallet_service import WalletService
     
-    # TODO: Implement actual data counting when other models are available
-    # For now, return basic summary
+    user_service = UserService(db)
+    wallet_service = WalletService(db)
+    
+    # Get wallet count
+    wallet_summary = wallet_service.get_wallet_summary(current_user.id)
     
     return {
         "user_id": current_user.id,
         "email": current_user.email,
         "account_created": current_user.created_at,
-        "wallets_count": 0,  # TODO: Count actual wallets
-        "transactions_count": 0,  # TODO: Count actual transactions
-        "debts_count": 0,  # TODO: Count actual debts
-        "transfers_count": 0,  # TODO: Count actual transfers
+        "wallets_count": wallet_summary.total_wallets,
+        "transactions_count": 0,  # TODO: Count actual transactions when implemented
+        "debts_count": 0,  # TODO: Count actual debts when implemented
+        "transfers_count": 0,  # TODO: Count actual transfers when implemented
+        "total_balance": wallet_summary.total_balance,
         "data_summary_generated_at": datetime.now()
     }
