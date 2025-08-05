@@ -27,7 +27,6 @@ def upgrade() -> None:
     sa.Column('source_wallet_id', sa.Integer(), nullable=False),
     sa.Column('target_wallet_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['source_wallet_id'], ['wallets.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['target_wallet_id'], ['wallets.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
