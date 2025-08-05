@@ -87,7 +87,7 @@ class DebtRepository:
             if filters.overdue_only:
                 query = query.filter(
                     and_(
-                        Debt.due_date < datetime.utcnow(),
+                        Debt.due_date < datetime.now(timezone.utc),
                         Debt.is_paid == False
                     )
                 )
