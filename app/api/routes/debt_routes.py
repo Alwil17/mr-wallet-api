@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+from app.constants import Constants
 from app.schemas.debt_dto import (
     DebtCreateDTO,
     DebtUpdateDTO,
@@ -46,7 +47,7 @@ async def create_debt(
         debt = debt_service.create_debt(debt_data, current_user.id)
         return DebtResponse.model_validate(debt)
     except ValueError as e:
-        if "not found" in str(e).lower():
+        if Constants.NOT_FOUND in str(e).lower():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=str(e)
@@ -209,7 +210,7 @@ async def update_debt(
         debt = debt_service.update_debt(debt_id, debt_data, current_user.id)
         return DebtResponse.model_validate(debt)
     except ValueError as e:
-        if "not found" in str(e).lower():
+        if Constants.NOT_FOUND in str(e).lower():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=str(e)
@@ -248,7 +249,7 @@ async def mark_debt_payment(
         debt = debt_service.mark_debt_as_paid(debt_id, payment_data, current_user.id)
         return DebtResponse.model_validate(debt)
     except ValueError as e:
-        if "not found" in str(e).lower():
+        if Constants.NOT_FOUND in str(e).lower():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=str(e)
@@ -285,7 +286,7 @@ async def delete_debt(
         debt_service.delete_debt(debt_id, current_user.id)
         return {"message": "Debt deleted successfully"}
     except ValueError as e:
-        if "not found" in str(e).lower():
+        if Constants.NOT_FOUND in str(e).lower():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=str(e)
