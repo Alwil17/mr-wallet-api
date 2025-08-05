@@ -17,10 +17,13 @@ class Wallet(Base):
 
     # Relationships
     user = relationship("User", back_populates="wallets")
-    transactions = relationship("Transaction", back_populates="wallet", cascade="all, delete-orphan")
-    debts = relationship("Debt", back_populates="wallet", cascade="all, delete-orphan")
-    source_transfers = relationship("Transfer", foreign_keys="Transfer.source_wallet_id", back_populates="source_wallet")
-    target_transfers = relationship("Transfer", foreign_keys="Transfer.target_wallet_id", back_populates="target_wallet")
+    # TODO: Uncomment when Transaction model is implemented
+    # transactions = relationship("Transaction", back_populates="wallet", cascade="all, delete-orphan")
+    # TODO: Uncomment when Debt model is implemented  
+    # debts = relationship("Debt", back_populates="wallet", cascade="all, delete-orphan")
+    # TODO: Uncomment when Transfer model is implemented
+    # source_transfers = relationship("Transfer", foreign_keys="Transfer.source_wallet_id", back_populates="source_wallet")
+    # target_transfers = relationship("Transfer", foreign_keys="Transfer.target_wallet_id", back_populates="target_wallet")
 
     def __repr__(self):
         return f"<Wallet(id={self.id}, name='{self.name}', type='{self.type}', balance={self.balance})>"
