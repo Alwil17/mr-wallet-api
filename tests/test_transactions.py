@@ -4,19 +4,19 @@ from sqlalchemy.orm import Session
 from decimal import Decimal
 from datetime import datetime
 from app.db.models.transaction import TransactionType, TransactionCategory
-
+import math
 
 class TestTransactions:
     """Test transaction management endpoints"""
 
-    def test_create_transaction_income_success(self, client: TestClient, user_auth, test_wallet):
+    def test_create_transaction_income_success(self, client: TestClient, user_auth, test_wallet_api):
         """Test successful income transaction creation"""
         transaction_data = {
             "type": "income",
             "amount": 1500.00,
             "category": "salary",
             "note": "Monthly salary",
-            "wallet_id": test_wallet["id"]
+            "wallet_id": test_wallet_api["id"]
         }
         
         response = client.post(
@@ -28,21 +28,21 @@ class TestTransactions:
         assert response.status_code == 201
         data = response.json()
         assert data["type"] == "income"
-        assert float(data["amount"]) == 1500.00
+        assert math.isclose(float(data["amount"]), 1500.00, rel_tol=1e-9) 
         assert data["category"] == "salary"
         assert data["note"] == "Monthly salary"
-        assert data["wallet_id"] == test_wallet["id"]
+        assert data["wallet_id"] == test_wallet_api["id"]
         assert "id" in data
         assert "created_at" in data
 
-    def test_create_transaction_expense_success(self, client: TestClient, user_auth, test_wallet):
+    def test_create_transaction_expense_success(self, client: TestClient, user_auth, test_wallet_api):
         """Test successful expense transaction creation"""
         transaction_data = {
             "type": "expense",
             "amount": 150.00,
             "category": "food",
             "note": "Grocery shopping",
-            "wallet_id": test_wallet["id"]
+            "wallet_id": test_wallet_api["id"]
         }
         
         response = client.post(
@@ -54,17 +54,17 @@ class TestTransactions:
         assert response.status_code == 201
         data = response.json()
         assert data["type"] == "expense"
-        assert float(data["amount"]) == 150.00
+        assert math.isclose(float(data["amount"]), 150.00, rel_tol=1e-9)
         assert data["category"] == "food"
         assert data["note"] == "Grocery shopping"
 
-    def test_create_transaction_unauthorized(self, client: TestClient, test_wallet):
+    def test_create_transaction_unauthorized(self, client: TestClient, test_wallet_api):
         """Test transaction creation without authentication"""
         transaction_data = {
             "type": "income",
             "amount": 100.00,
             "category": "salary",
-            "wallet_id": test_wallet["id"]
+            "wallet_id": test_wallet_api["id"]
         }
         
         response = client.post("/transactions/", json=transaction_data)
@@ -154,7 +154,7 @@ class TestTransactions:
         
         assert response.status_code == 201
 
-    def test_get_user_transactions(self, client: TestClient, user_auth, test_wallet):
+    def test_get_user_transactions(self, client: TestClient, user_auth, test_wallet_api):
         """Test getting user's transactions"""
         # Create a couple of transactions first
         transactions = [
@@ -163,14 +163,14 @@ class TestTransactions:
                 "amount": 1000.00,
                 "category": "salary",
                 "note": "Salary deposit",
-                "wallet_id": test_wallet["id"]
+                "wallet_id": test_wallet_api["id"]
             },
             {
                 "type": "expense",
                 "amount": 200.00,
                 "category": "food",
                 "note": "Groceries",
-                "wallet_id": test_wallet["id"]
+                "wallet_id": test_wallet_api["id"]
             }
         ]
         
@@ -191,7 +191,7 @@ class TestTransactions:
         assert data["total"] >= 2  # At least the 2 we created
         assert len(data["transactions"]) >= 2
 
-    def test_get_transactions_with_filters(self, client: TestClient, user_auth, test_wallet):
+    def test_get_transactions_with_filters(self, client: TestClient, user_auth, test_wallet_api):
         """Test getting transactions with filters"""
         # Create transactions with different types and categories
         transactions = [
@@ -200,21 +200,21 @@ class TestTransactions:
                 "amount": 1500.00,
                 "category": "salary",
                 "note": "Monthly salary",
-                "wallet_id": test_wallet["id"]
+                "wallet_id": test_wallet_api["id"]
             },
             {
                 "type": "expense",
                 "amount": 300.00,
                 "category": "food",
                 "note": "Restaurant",
-                "wallet_id": test_wallet["id"]
+                "wallet_id": test_wallet_api["id"]
             },
             {
                 "type": "expense",
                 "amount": 100.00,
                 "category": "transport",
                 "note": "Gas",
-                "wallet_id": test_wallet["id"]
+                "wallet_id": test_wallet_api["id"]
             }
         ]
         
@@ -249,7 +249,7 @@ class TestTransactions:
         food_transactions = [t for t in data["transactions"] if t["category"] == "food"]
         assert len(food_transactions) >= 1
 
-    def test_get_transaction_by_id(self, client: TestClient, user_auth, test_wallet):
+    def test_get_transaction_by_id(self, client: TestClient, user_auth, test_wallet_api):
         """Test getting specific transaction by ID"""
         # Create a transaction
         transaction_data = {
@@ -257,7 +257,7 @@ class TestTransactions:
             "amount": 800.00,
             "category": "freelance",
             "note": "Web development project",
-            "wallet_id": test_wallet["id"]
+            "wallet_id": test_wallet_api["id"]
         }
         
         create_response = client.post(
@@ -276,7 +276,7 @@ class TestTransactions:
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == transaction_id
-        assert float(data["amount"]) == 800.00
+        assert math.isclose(float(data["amount"]), 800.00, rel_tol=1e-9)
         assert data["category"] == "freelance"
 
     def test_get_transaction_not_found(self, client: TestClient, user_auth):
@@ -286,7 +286,7 @@ class TestTransactions:
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
 
-    def test_update_transaction_success(self, client: TestClient, user_auth, test_wallet):
+    def test_update_transaction_success(self, client: TestClient, user_auth, test_wallet_api):
         """Test successful transaction update"""
         # Create transaction
         transaction_data = {
@@ -294,7 +294,7 @@ class TestTransactions:
             "amount": 100.00,
             "category": "food",
             "note": "Original note",
-            "wallet_id": test_wallet["id"]
+            "wallet_id": test_wallet_api["id"]
         }
         
         create_response = client.post(
@@ -319,7 +319,7 @@ class TestTransactions:
         
         assert response.status_code == 200
         data = response.json()
-        assert float(data["amount"]) == 150.00
+        assert math.isclose(float(data["amount"]), 150.00, rel_tol=1e-9)
         assert data["note"] == "Updated note"
         assert data["category"] == "entertainment"
 
@@ -335,14 +335,14 @@ class TestTransactions:
         
         assert response.status_code == 404
 
-    def test_delete_transaction_success(self, client: TestClient, user_auth, test_wallet):
+    def test_delete_transaction_success(self, client: TestClient, user_auth, test_wallet_api):
         """Test successful transaction deletion"""
         # Create transaction
         transaction_data = {
             "type": "expense",
             "amount": 50.00,
             "category": "transport",
-            "wallet_id": test_wallet["id"]
+            "wallet_id": test_wallet_api["id"]
         }
         
         create_response = client.post(
@@ -367,7 +367,7 @@ class TestTransactions:
         
         assert response.status_code == 404
 
-    def test_get_transaction_summary(self, client: TestClient, user_auth, test_wallet):
+    def test_get_transaction_summary(self, client: TestClient, user_auth, test_wallet_api):
         """Test getting transaction summary"""
         # Create various transactions
         transactions = [
@@ -375,25 +375,25 @@ class TestTransactions:
                 "type": "income",
                 "amount": 2000.00,
                 "category": "salary",
-                "wallet_id": test_wallet["id"]
+                "wallet_id": test_wallet_api["id"]
             },
             {
                 "type": "income",
                 "amount": 500.00,
                 "category": "freelance",
-                "wallet_id": test_wallet["id"]
+                "wallet_id": test_wallet_api["id"]
             },
             {
                 "type": "expense",
                 "amount": 300.00,
                 "category": "food",
-                "wallet_id": test_wallet["id"]
+                "wallet_id": test_wallet_api["id"]
             },
             {
                 "type": "expense",
                 "amount": 200.00,
                 "category": "transport",
-                "wallet_id": test_wallet["id"]
+                "wallet_id": test_wallet_api["id"]
             }
         ]
         
@@ -496,8 +496,8 @@ class TestTransactions:
         
         # Check wallet balance
         wallet_response = client.get(f"/wallets/{wallet_id}", headers=user_auth["headers"])
-        assert float(wallet_response.json()["balance"]) == 1500.00
-        
+        assert math.isclose(float(wallet_response.json()["balance"]), 1500.00, rel_tol=1e-9)
+
         # Create expense transaction (-200)
         expense_data = {
             "type": "expense",
@@ -510,7 +510,7 @@ class TestTransactions:
         
         # Check wallet balance again
         wallet_response = client.get(f"/wallets/{wallet_id}", headers=user_auth["headers"])
-        assert float(wallet_response.json()["balance"]) == 1300.00
+        assert math.isclose(float(wallet_response.json()["balance"]), 1300.00, rel_tol=1e-9)
 
     def test_transaction_operations_unauthorized(self, client: TestClient):
         """Test transaction operations without authentication"""
