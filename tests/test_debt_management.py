@@ -16,7 +16,7 @@ class TestDebtManagement:
             "borrower": "John Doe",
             "type": "owed",
             "description": "Loan to John for car repair",
-            "due_date": (datetime.utcnow() + timedelta(days=30)).isoformat(),
+            "due_date": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
             "wallet_id": test_wallet["id"]
         }
         
