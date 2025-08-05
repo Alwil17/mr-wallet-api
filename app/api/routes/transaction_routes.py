@@ -286,7 +286,7 @@ def get_transaction_files(
         )
 
     files = service.get_transaction_files(transaction_id, current_user.id)
-    return [FileResponse.from_orm(f) for f in files]
+    return [FileResponse.model_validate(f, from_attributes=True) for f in files]
 
 
 @router.delete("/files/{file_id}")
