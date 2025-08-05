@@ -47,16 +47,10 @@ async def create_debt(
         debt = debt_service.create_debt(debt_data, current_user.id)
         return DebtResponse.model_validate(debt)
     except ValueError as e:
-        if Constants.NOT_FOUND in str(e).lower():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 
 @router.get("/", response_model=DebtListResponse)
