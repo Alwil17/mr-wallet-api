@@ -8,27 +8,42 @@ from app.db.models.file import FileType
 
 class TransactionCreateDTO(BaseModel):
     """Schema for creating a new transaction"""
-    type: TransactionType = Field(..., description="Transaction type (income or expense)")
-    amount: Decimal = Field(..., gt=0, description="Transaction amount (must be positive)")
+
+    type: TransactionType = Field(
+        ..., description="Transaction type (income or expense)"
+    )
+    amount: Decimal = Field(
+        ..., gt=0, description="Transaction amount (must be positive)"
+    )
     category: TransactionCategory = Field(..., description="Transaction category")
-    note: Optional[str] = Field(None, max_length=1000, description="Optional note or description")
-    date: Optional[datetime] = Field(None, description="Transaction date (defaults to now)")
+    note: Optional[str] = Field(
+        None, max_length=1000, description="Optional note or description"
+    )
+    date: Optional[datetime] = Field(
+        None, description="Transaction date (defaults to now)"
+    )
     wallet_id: int = Field(..., description="Wallet ID for the transaction")
 
 
 class TransactionUpdateDTO(BaseModel):
     """Schema for updating transaction information"""
+
     type: Optional[TransactionType] = Field(None, description="Transaction type")
     amount: Optional[Decimal] = Field(None, gt=0, description="Transaction amount")
-    category: Optional[TransactionCategory] = Field(None, description="Transaction category")
-    note: Optional[str] = Field(None, max_length=1000, description="Note or description")
+    category: Optional[TransactionCategory] = Field(
+        None, description="Transaction category"
+    )
+    note: Optional[str] = Field(
+        None, max_length=1000, description="Note or description"
+    )
     date: Optional[datetime] = Field(None, description="Transaction date")
 
 
 class FileResponse(BaseModel):
     """Schema for file response"""
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     filename: str
     original_filename: str
@@ -41,8 +56,9 @@ class FileResponse(BaseModel):
 
 class TransactionResponse(BaseModel):
     """Schema for transaction response"""
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     type: TransactionType
     amount: Decimal
@@ -57,6 +73,7 @@ class TransactionResponse(BaseModel):
 
 class TransactionListResponse(BaseModel):
     """Schema for transaction list response"""
+
     transactions: List[TransactionResponse]
     total: int
     page: int
@@ -66,6 +83,7 @@ class TransactionListResponse(BaseModel):
 
 class TransactionSummaryResponse(BaseModel):
     """Schema for transaction summary response"""
+
     total_transactions: int
     total_income: Decimal
     total_expenses: Decimal
@@ -76,29 +94,41 @@ class TransactionSummaryResponse(BaseModel):
 
 class TransactionFilterDTO(BaseModel):
     """Schema for transaction filtering"""
+
     wallet_id: Optional[int] = Field(None, description="Filter by wallet ID")
-    type: Optional[TransactionType] = Field(None, description="Filter by transaction type")
-    category: Optional[TransactionCategory] = Field(None, description="Filter by category")
+    type: Optional[TransactionType] = Field(
+        None, description="Filter by transaction type"
+    )
+    category: Optional[TransactionCategory] = Field(
+        None, description="Filter by category"
+    )
     start_date: Optional[datetime] = Field(None, description="Filter from start date")
     end_date: Optional[datetime] = Field(None, description="Filter to end date")
-    min_amount: Optional[Decimal] = Field(None, ge=0, description="Minimum amount filter")
-    max_amount: Optional[Decimal] = Field(None, ge=0, description="Maximum amount filter")
+    min_amount: Optional[Decimal] = Field(
+        None, ge=0, description="Minimum amount filter"
+    )
+    max_amount: Optional[Decimal] = Field(
+        None, ge=0, description="Maximum amount filter"
+    )
     search: Optional[str] = Field(None, max_length=255, description="Search in notes")
 
 
 class FileUploadDTO(BaseModel):
     """Schema for file upload"""
+
     file_type: FileType = Field(..., description="Type of the file")
     transaction_id: int = Field(..., description="Transaction ID to attach file to")
 
 
 class BulkTransactionCreateDTO(BaseModel):
     """Schema for creating multiple transactions"""
+
     transactions: List[TransactionCreateDTO] = Field(..., min_length=1, max_length=100)
-    
-    
+
+
 class TransactionStatsResponse(BaseModel):
     """Schema for transaction statistics"""
+
     period: str  # "daily", "weekly", "monthly", "yearly"
     income_total: Decimal
     expense_total: Decimal

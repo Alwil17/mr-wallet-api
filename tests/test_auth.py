@@ -11,11 +11,11 @@ class TestAuth:
         user_data = {
             "name": "New User",
             "email": "newuser@example.com",
-            "password": "password123"
+            "password": "password123",
         }
-        
+
         response = client.post("/auth/register", json=user_data)
-        
+
         assert response.status_code == 201
         data = response.json()
         assert data["email"] == user_data["email"]
@@ -29,35 +29,35 @@ class TestAuth:
         user_data = {
             "name": "Duplicate User",
             "email": test_user.email,
-            "password": "password123"
+            "password": "password123",
         }
-        
+
         response = client.post("/auth/register", json=user_data)
-        
+
         assert response.status_code == 400
-        assert "email already registered" in response.json()["detail"].lower()
+        assert (
+            "a user with this email already exists."
+            in response.json()["detail"].lower()
+        )
 
     def test_register_user_invalid_data(self, client: TestClient):
         """Test registration with invalid data"""
         user_data = {
             "name": "",
             "email": "invalid-email",
-            "password": "123"  # Too short
+            "password": "123",  # Too short
         }
-        
+
         response = client.post("/auth/register", json=user_data)
-        
+
         assert response.status_code == 422
 
     def test_login_success(self, client: TestClient, test_user):
         """Test successful login"""
-        form_data = {
-            "username": test_user.email,
-            "password": "testpassword123"
-        }
-        
+        form_data = {"username": test_user.email, "password": "testpassword123"}
+
         response = client.post("/auth/token", data=form_data)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "access_token" in data
@@ -66,34 +66,27 @@ class TestAuth:
 
     def test_login_invalid_credentials(self, client: TestClient, test_user):
         """Test login with invalid credentials"""
-        form_data = {
-            "username": test_user.email,
-            "password": "wrongpassword"
-        }
-        
+        form_data = {"username": test_user.email, "password": "wrongpassword"}
+
         response = client.post("/auth/token", data=form_data)
-        
+
         assert response.status_code == 401
         assert "incorrect email or password" in response.json()["detail"].lower()
 
     def test_login_nonexistent_user(self, client: TestClient):
         """Test login with non-existent user"""
-        form_data = {
-            "username": "nonexistent@example.com",
-            "password": "password123"
-        }
-        
+        form_data = {"username": "nonexistent@example.com", "password": "password123"}
+
         response = client.post("/auth/token", data=form_data)
-        
+
         assert response.status_code == 401
 
     def test_refresh_token_success(self, client: TestClient, user_auth):
         """Test successful token refresh"""
         response = client.post(
-            "/auth/token/refresh",
-            json={"refresh_token": user_auth["refresh_token"]}
+            "/auth/token/refresh", json={"refresh_token": user_auth["refresh_token"]}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "access_token" in data
@@ -106,10 +99,9 @@ class TestAuth:
     def test_refresh_token_invalid(self, client: TestClient):
         """Test refresh with invalid token"""
         response = client.post(
-            "/auth/token/refresh",
-            json={"refresh_token": "invalid_refresh_token"}
+            "/auth/token/refresh", json={"refresh_token": "invalid_refresh_token"}
         )
-        
+
         assert response.status_code == 401
         assert "invalid refresh token" in response.json()["detail"].lower()
 
@@ -118,9 +110,9 @@ class TestAuth:
         response = client.post(
             "/auth/logout",
             json={"refresh_token": user_auth["refresh_token"]},
-            headers=user_auth["headers"]
+            headers=user_auth["headers"],
         )
-        
+
         assert response.status_code == 200
         assert response.json()["message"] == "Successfully logged out"
 
@@ -129,16 +121,16 @@ class TestAuth:
         response = client.post(
             "/auth/logout",
             json={"refresh_token": "invalid_token"},
-            headers=auth_headers
+            headers=auth_headers,
         )
-        
+
         assert response.status_code == 401
         assert "invalid refresh token" in response.json()["detail"].lower()
 
     def test_get_profile(self, client: TestClient, test_user, auth_headers):
         """Test getting user profile"""
         response = client.get("/auth/profile", headers=auth_headers)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["email"] == test_user.email
@@ -149,18 +141,15 @@ class TestAuth:
     def test_get_profile_unauthorized(self, client: TestClient):
         """Test getting profile without authentication"""
         response = client.get("/auth/profile")
-        
+
         assert response.status_code == 401
 
     def test_update_profile(self, client: TestClient, auth_headers):
         """Test updating user profile"""
-        update_data = {
-            "name": "Updated Name",
-            "email": "updated@example.com"
-        }
-        
+        update_data = {"name": "Updated Name", "email": "updated@example.com"}
+
         response = client.put("/auth/profile", json=update_data, headers=auth_headers)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == update_data["name"]
@@ -170,11 +159,13 @@ class TestAuth:
         """Test changing password"""
         password_data = {
             "current_password": "testpassword123",
-            "new_password": "newpassword123"
+            "new_password": "newpassword123",
         }
-        
-        response = client.put("/auth/password", json=password_data, headers=auth_headers)
-        
+
+        response = client.put(
+            "/auth/password", json=password_data, headers=auth_headers
+        )
+
         assert response.status_code == 200
         assert response.json()["message"] == "Password updated successfully"
 
@@ -182,56 +173,58 @@ class TestAuth:
         """Test changing password with wrong current password"""
         password_data = {
             "current_password": "wrongpassword",
-            "new_password": "newpassword123"
+            "new_password": "newpassword123",
         }
-        
-        response = client.put("/auth/password", json=password_data, headers=auth_headers)
-        
+
+        response = client.put(
+            "/auth/password", json=password_data, headers=auth_headers
+        )
+
         assert response.status_code == 400
         assert "current password is incorrect" in response.json()["detail"].lower()
 
     def test_delete_account_success(self, client: TestClient, user_auth):
         """Test successful account deletion"""
-        response = client.delete(
-            "/auth/account",
-            headers=user_auth["headers"]
-        )
-        
+        response = client.delete("/auth/account", headers=user_auth["headers"])
+
         assert response.status_code == 200
         assert response.json()["message"] == "Account deleted successfully"
 
     def test_delete_account_unauthorized(self, client: TestClient):
         """Test account deletion without authentication"""
         response = client.delete("/auth/account")
-        
+
         assert response.status_code == 401
 
     def test_get_gdpr_data(self, client: TestClient, test_user, auth_headers):
         """Test getting GDPR data export"""
         response = client.get("/auth/gdpr/data", headers=auth_headers)
-        
+
         assert response.status_code == 200
         data = response.json()
-        assert data["user"]["email"] == test_user.email
-        assert data["user"]["name"] == test_user.name
+        assert data["user_info"]["email"] == test_user.email
+        assert data["user_info"]["name"] == test_user.name
         assert "wallets" in data
-        assert "refresh_tokens" in data
+        assert "transactions" in data
+        assert "debts" in data
+        assert "transfers" in data
+        assert "export_timestamp" in data
 
     def test_protected_route_with_valid_token(self, client: TestClient, auth_headers):
         """Test accessing protected route with valid token"""
         response = client.get("/auth/profile", headers=auth_headers)
-        
+
         assert response.status_code == 200
 
     def test_protected_route_with_invalid_token(self, client: TestClient):
         """Test accessing protected route with invalid token"""
         headers = {"Authorization": "Bearer invalid_token"}
         response = client.get("/auth/profile", headers=headers)
-        
+
         assert response.status_code == 401
 
     def test_protected_route_without_token(self, client: TestClient):
         """Test accessing protected route without token"""
         response = client.get("/auth/profile")
-        
+
         assert response.status_code == 401

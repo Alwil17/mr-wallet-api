@@ -17,5 +17,9 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
-    refresh_tokens = relationship("RefreshToken", back_populates="user")
-    wallets = relationship("Wallet", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens = relationship(
+        "RefreshToken", back_populates="user", cascade="all, delete-orphan"
+    )
+    wallets = relationship(
+        "Wallet", back_populates="user", cascade="all, delete-orphan"
+    )

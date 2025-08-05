@@ -12,7 +12,7 @@ Base = declarative_base()
 def get_db():
     """
     Dependency that provides a database session.
-    
+
     Yields:
         Session: A SQLAlchemy database session
     """

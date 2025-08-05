@@ -3,6 +3,11 @@ from sqlalchemy.orm import Session
 from app.core.security import verify_password
 from app.db.models.user import User
 from app.repositories.user_repository import UserRepository
+from app.repositories.wallet_repository import WalletRepository
+from app.repositories.transaction_repository import TransactionRepository
+from app.repositories.debt_repository import DebtRepository
+from app.repositories.transfer_repository import TransferRepository
+from app.repositories.file_repository import FileRepository
 from app.schemas.user_dto import (
     UserCreateDTO,
     UserResponse,
@@ -10,6 +15,10 @@ from app.schemas.user_dto import (
     UserExportData,
     AccountDeletionRequest,
 )
+from app.schemas.wallet_dto import WalletResponse
+from app.schemas.transaction_dto import TransactionResponse
+from app.schemas.debt_dto import DebtResponse
+from app.schemas.transfer_dto import TransferResponse
 from datetime import datetime
 
 USER_NOT_FOUND = "User not found"
@@ -24,6 +33,12 @@ class UserService:
             db_session (Session): The database session
         """
         self.repository = UserRepository(db_session)
+        self.wallet_repository = WalletRepository(db_session)
+        self.transaction_repository = TransactionRepository(db_session)
+        self.debt_repository = DebtRepository(db_session)
+        self.transfer_repository = TransferRepository(db_session)
+        self.file_repository = FileRepository(db_session)
+        self.db = db_session
 
     def create_user(self, user_data: UserCreateDTO) -> User:
         """
@@ -137,16 +152,32 @@ class UserService:
         if not user:
             raise ValueError(USER_NOT_FOUND)
 
-        # TODO: Get all user data from different repositories
-        # For now, we'll return basic user info and empty collections
-        # This will be expanded when wallet, transaction, debt, and transfer models are implemented
+        # Get all user wallets
+        wallets = self.wallet_repository.get_user_wallets(user_id, limit=1000)
+        wallet_data = [WalletResponse.model_validate(wallet) for wallet in wallets]
+
+        # Get all user transactions
+        transaction_response = self.transaction_repository.get_user_transactions(
+            user_id=user_id, filters=None, skip=0, limit=10000
+        )
+        transaction_data = transaction_response.transactions
+
+        # Get all user debts
+        debts = self.debt_repository.get_user_debts(user_id, limit=1000)
+        debt_data = [DebtResponse.model_validate(debt) for debt in debts]
+
+        # Get all user transfers
+        transfers = self.transfer_repository.get_user_transfers(user_id, limit=1000)
+        transfer_data = [
+            TransferResponse.model_validate(transfer) for transfer in transfers
+        ]
 
         return UserExportData(
             user_info=UserResponse.model_validate(user),
-            wallets=[],
-            transactions=[],
-            debts=[],
-            transfers=[],
+            wallets=wallet_data,
+            transactions=transaction_data,
+            debts=debt_data,
+            transfers=transfer_data,
             export_timestamp=datetime.now(),
             data_retention_period="As per GDPR, data is retained for legitimate business purposes only",
         )
@@ -179,30 +210,43 @@ class UserService:
 
         try:
             # Start transaction
-            self.repository.db.begin()
+            self.db.begin()
 
-            # TODO: Delete all associated data
-            # For now, we'll just delete the user account
-            # This will be expanded when wallet, transaction, debt, and transfer models are implemented
+            # Since we have CASCADE constraints set up in the database,
+            # deleting the user should automatically delete all related data
+            # However, we need to handle files separately as they may have physical files on disk
 
-            # Finally delete the user account
+            # Get all user transactions to clean up their files
+            transaction_response = self.transaction_repository.get_user_transactions(
+                user_id=user_id, filters=None, skip=0, limit=10000
+            )
+
+            # Delete all transaction files (both database records and physical files)
+            for transaction in transaction_response.transactions:
+                files = self.file_repository.get_transaction_files(
+                    transaction.id, user_id
+                )
+                for file in files:
+                    self.file_repository.delete(file.id, user_id)
+
+            # Now delete the user account (CASCADE will handle all related data)
             success = self.repository.delete(user_id)
 
             if not success:
                 raise ValueError("Failed to delete user account")
 
             # Commit transaction
-            self.repository.db.commit()
+            self.db.commit()
 
             return {
                 "message": "User account and all associated data has been permanently deleted",
                 "deleted_at": datetime.now().isoformat(),
-                "user_email": user.email
+                "user_email": user.email,
             }
 
         except Exception as e:
             # Rollback transaction
-            self.repository.db.rollback()
+            self.db.rollback()
             raise ValueError(f"Failed to delete user account: {str(e)}")
 
     def change_password(self, user_id: int, new_password: str) -> bool:
@@ -246,13 +290,10 @@ class UserService:
             # Anonymize user data
             anonymous_email = f"anonymous_{user_id}@deleted.local"
             anonymous_name = f"Anonymous User {user_id}"
-            
+
             # Update user with anonymized data
-            update_data = UserUpdateDTO(
-                name=anonymous_name,
-                email=anonymous_email
-            )
-            
+            update_data = UserUpdateDTO(name=anonymous_name, email=anonymous_email)
+
             updated_user = self.repository.update(user_id, update_data)
             if not updated_user:
                 raise ValueError("Failed to anonymize user data")
@@ -260,7 +301,7 @@ class UserService:
             return {
                 "message": "User data has been anonymized",
                 "anonymized_at": datetime.now().isoformat(),
-                "user_id": user_id
+                "user_id": user_id,
             }
 
         except Exception as e:

@@ -7,6 +7,7 @@ import enum
 
 class FileType(str, enum.Enum):
     """File type enumeration"""
+
     RECEIPT = "receipt"
     INVOICE = "invoice"
     DOCUMENT = "document"
@@ -17,6 +18,7 @@ class FileType(str, enum.Enum):
 
 class File(Base):
     """File model for transaction attachments"""
+
     __tablename__ = "files"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -26,13 +28,15 @@ class File(Base):
     file_type = Column(Enum(FileType), nullable=False)
     file_size = Column(Integer, nullable=True)  # Size in bytes
     mime_type = Column(String(100), nullable=True)
-    
+
     # Foreign keys
-    transaction_id = Column(Integer, ForeignKey("transactions.id", ondelete="CASCADE"), nullable=False)
-    
+    transaction_id = Column(
+        Integer, ForeignKey("transactions.id", ondelete="CASCADE"), nullable=False
+    )
+
     # Timestamps
     uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
-    
+
     # Relationships
     transaction = relationship("Transaction", back_populates="files")
 

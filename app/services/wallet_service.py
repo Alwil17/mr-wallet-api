@@ -9,7 +9,7 @@ from app.schemas.wallet_dto import (
     WalletResponse,
     WalletListResponse,
     WalletBalanceUpdateDTO,
-    WalletSummaryResponse
+    WalletSummaryResponse,
 )
 
 WALLET_NOT_FOUND = "Wallet not found"
@@ -53,7 +53,9 @@ class WalletService:
         """
         return self.repository.get_by_id_and_user(wallet_id, user_id)
 
-    def get_user_wallets(self, user_id: int, skip: int = 0, limit: int = 100) -> WalletListResponse:
+    def get_user_wallets(
+        self, user_id: int, skip: int = 0, limit: int = 100
+    ) -> WalletListResponse:
         """
         Get all wallets for a user
 
@@ -67,15 +69,14 @@ class WalletService:
         """
         wallets = self.repository.get_user_wallets(user_id, skip, limit)
         total = self.repository.count_user_wallets(user_id)
-        
-        wallet_responses = [WalletResponse.model_validate(wallet) for wallet in wallets]
-        
-        return WalletListResponse(
-            wallets=wallet_responses,
-            total=total
-        )
 
-    def update_wallet(self, wallet_id: int, wallet_data: WalletUpdateDTO, user_id: int) -> Optional[Wallet]:
+        wallet_responses = [WalletResponse.model_validate(wallet) for wallet in wallets]
+
+        return WalletListResponse(wallets=wallet_responses, total=total)
+
+    def update_wallet(
+        self, wallet_id: int, wallet_data: WalletUpdateDTO, user_id: int
+    ) -> Optional[Wallet]:
         """
         Update a wallet (with user ownership verification)
 
@@ -97,7 +98,9 @@ class WalletService:
 
         return self.repository.update(wallet_id, wallet_data)
 
-    def update_wallet_balance(self, wallet_id: int, balance_update: WalletBalanceUpdateDTO, user_id: int) -> Optional[Wallet]:
+    def update_wallet_balance(
+        self, wallet_id: int, balance_update: WalletBalanceUpdateDTO, user_id: int
+    ) -> Optional[Wallet]:
         """
         Update wallet balance
 
@@ -147,12 +150,16 @@ class WalletService:
             bool: True if wallet was deleted
 
         Raises:
-            ValueError: If wallet not found or not owned by user
+            ValueError: If wallet not found or not owned by user, or if balance is not zero
         """
         # Verify ownership
         wallet = self.repository.get_by_id_and_user(wallet_id, user_id)
         if not wallet:
             raise ValueError(WALLET_NOT_FOUND)
+
+        # Check if balance is zero
+        if wallet.balance != 0:
+            raise ValueError("Wallet balance must be zero before deletion")
 
         return self.repository.delete(wallet_id)
 
@@ -167,19 +174,23 @@ class WalletService:
             WalletSummaryResponse: Summary of user's wallets
         """
         summary_data = self.repository.get_user_wallet_summary(user_id)
-        
+
         most_recent_wallet = None
         if summary_data["most_recent_wallet"]:
-            most_recent_wallet = WalletResponse.model_validate(summary_data["most_recent_wallet"])
+            most_recent_wallet = WalletResponse.model_validate(
+                summary_data["most_recent_wallet"]
+            )
 
         return WalletSummaryResponse(
             total_wallets=summary_data["total_wallets"],
             total_balance=summary_data["total_balance"],
             wallets_by_type=summary_data["wallets_by_type"],
-            most_recent_wallet=most_recent_wallet
+            most_recent_wallet=most_recent_wallet,
         )
 
-    def get_wallets_by_type(self, user_id: int, wallet_type: str) -> List[WalletResponse]:
+    def get_wallets_by_type(
+        self, user_id: int, wallet_type: str
+    ) -> List[WalletResponse]:
         """
         Get all wallets of a specific type for a user
 

@@ -24,7 +24,9 @@ class FileRepository:
         self.upload_dir = "uploads/transaction_files"
         os.makedirs(self.upload_dir, exist_ok=True)
 
-    def create(self, file: UploadFile, transaction_id: int, file_type: FileType, user_id: int) -> File:
+    def create(
+        self, file: UploadFile, transaction_id: int, file_type: FileType, user_id: int
+    ) -> File:
         """
         Upload and create a file record
 
@@ -36,18 +38,18 @@ class FileRepository:
 
         Returns:
             File: The created file record
-            
+
         Raises:
             ValueError: If transaction not found or not owned by user
         """
         # Verify transaction ownership
-        transaction = self.db.query(Transaction).join(Wallet).filter(
-            and_(
-                Transaction.id == transaction_id,
-                Wallet.user_id == user_id
-            )
-        ).first()
-        
+        transaction = (
+            self.db.query(Transaction)
+            .join(Wallet)
+            .filter(and_(Transaction.id == transaction_id, Wallet.user_id == user_id))
+            .first()
+        )
+
         if not transaction:
             raise ValueError("Transaction not found or not owned by user")
 
@@ -69,7 +71,7 @@ class FileRepository:
             file_type=file_type,
             file_size=len(content),
             mime_type=file.content_type,
-            transaction_id=transaction_id
+            transaction_id=transaction_id,
         )
 
         self.db.add(file_record)
@@ -88,12 +90,13 @@ class FileRepository:
         Returns:
             Optional[File]: The file or None if not found
         """
-        return self.db.query(File).join(Transaction).join(Wallet).filter(
-            and_(
-                File.id == file_id,
-                Wallet.user_id == user_id
-            )
-        ).first()
+        return (
+            self.db.query(File)
+            .join(Transaction)
+            .join(Wallet)
+            .filter(and_(File.id == file_id, Wallet.user_id == user_id))
+            .first()
+        )
 
     def get_transaction_files(self, transaction_id: int, user_id: int) -> List[File]:
         """
@@ -106,12 +109,15 @@ class FileRepository:
         Returns:
             List[File]: List of files
         """
-        return self.db.query(File).join(Transaction).join(Wallet).filter(
-            and_(
-                File.transaction_id == transaction_id,
-                Wallet.user_id == user_id
+        return (
+            self.db.query(File)
+            .join(Transaction)
+            .join(Wallet)
+            .filter(
+                and_(File.transaction_id == transaction_id, Wallet.user_id == user_id)
             )
-        ).all()
+            .all()
+        )
 
     def delete(self, file_id: int, user_id: int) -> bool:
         """
@@ -153,19 +159,19 @@ class FileRepository:
     def cleanup_orphaned_files(self) -> int:
         """
         Clean up files that exist on disk but not in database
-        
+
         Returns:
             int: Number of files cleaned up
         """
         if not os.path.exists(self.upload_dir):
             return 0
-            
+
         # Get all filenames from database
         db_filenames = {f.filename for f in self.db.query(File.filename).all()}
-        
+
         # Get all files on disk
         disk_files = os.listdir(self.upload_dir)
-        
+
         # Remove orphaned files
         cleaned_count = 0
         for disk_file in disk_files:
@@ -176,5 +182,5 @@ class FileRepository:
                     cleaned_count += 1
                 except OSError:
                     pass  # File might be in use or permission issue
-                    
+
         return cleaned_count

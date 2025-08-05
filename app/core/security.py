@@ -5,6 +5,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from app.constants import Constants
 from app.core.config import settings
 from sqlalchemy.orm import Session
 from app.db.base import get_db
@@ -14,7 +15,7 @@ from app.schemas.user_dto import UserResponse
 
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Could not validate credentials",
+    detail=Constants.CREDENTIALS_INVALID,
     headers={"WWW-Authenticate": "Bearer"},
 )
 
@@ -121,14 +122,14 @@ def get_current_user_role(token: str = Depends(oauth2_scheme)) -> str:
         if role is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
+                detail=Constants.CREDENTIALS_INVALID,
                 headers={"WWW-Authenticate": "Bearer"},
             )
         return role
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
+            detail=Constants.CREDENTIALS_INVALID,
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -160,8 +161,7 @@ def require_role(required_roles: List[str]):
         """
         if role not in required_roles:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
             )
         return role
 
@@ -174,18 +174,27 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
     Args:
         data (dict): Dictionary containing information to be encoded in the access token.
-        expires_delta (Optional[timedelta], optional): Optional timedelta specifying when the access token should expire. 
+        expires_delta (Optional[timedelta], optional): Optional timedelta specifying when the access token should expire.
                                                        Defaults to 30 minutes.
 
     Returns:
         str: The access token as a JSON Web Token (JWT) string.
     """
     to_encode = data.copy()
+    now = datetime.now(tz=timezone.utc)
     if expires_delta:
-        expire = datetime.now(tz=timezone.utc) + expires_delta
+        expire = now + expires_delta
     else:
-        expire = datetime.now(tz=timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+        expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": now,  # Include issued at timestamp for uniqueness
+            "jti": secrets.token_urlsafe(
+                16
+            ),  # Add a unique identifier to ensure token uniqueness
+        }
+    )
     encoded_jwt = jwt.encode(
         to_encode, settings.APP_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
     )
@@ -247,7 +256,15 @@ def verify_refresh_token(token: str, db: Session):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if refresh_token.expires_at < datetime.now(tz=timezone.utc):
+    # Handle timezone comparison properly
+    current_time = datetime.now(tz=timezone.utc)
+    expires_at = refresh_token.expires_at
+
+    # If expires_at is naive, assume it's UTC
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if expires_at < current_time:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token has expired",
