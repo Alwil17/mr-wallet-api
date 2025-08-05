@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from decimal import Decimal
 from datetime import datetime, timedelta
 from app.db.models.transfer import Transfer
+import math
 
 
 class TestTransferManagement:
@@ -46,7 +47,7 @@ class TestTransferManagement:
         
         assert response.status_code == 201
         data = response.json()
-        assert float(data["amount"]) == 300.00
+        assert math.isclose(float(data["amount"]), 300.00, rel_tol=1e-9)
         assert data["source_wallet_id"] == source_wallet_id
         assert data["target_wallet_id"] == target_wallet_id
         assert data["description"] == "Monthly savings transfer"
@@ -89,16 +90,16 @@ class TestTransferManagement:
         # Check updated balances
         source_balance_response = client.get(f"/wallets/{source_wallet_id}", headers=user_auth["headers"])
         target_balance_response = client.get(f"/wallets/{target_wallet_id}", headers=user_auth["headers"])
-        
-        assert float(source_balance_response.json()["balance"]) == 1100.00  # 1500 - 400
-        assert float(target_balance_response.json()["balance"]) == 2400.00  # 2000 + 400
 
-    def test_create_transfer_same_wallet_error(self, client: TestClient, user_auth, test_wallet):
+        assert math.isclose(float(source_balance_response.json()["balance"]), 1100.00, rel_tol=1e-9)  # 1500 - 400
+        assert math.isclose(float(target_balance_response.json()["balance"]), 2400.00, rel_tol=1e-9)  # 2000 + 400
+
+    def test_create_transfer_same_wallet_error(self, client: TestClient, user_auth, test_wallet_api):
         """Test transfer creation with same source and target wallet"""
         transfer_data = {
             "amount": 100.00,
-            "source_wallet_id": test_wallet["id"],
-            "target_wallet_id": test_wallet["id"],
+            "source_wallet_id": test_wallet_api["id"],
+            "target_wallet_id": test_wallet_api["id"],
             "description": "Invalid same wallet transfer"
         }
         
@@ -334,7 +335,7 @@ class TestTransferManagement:
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == transfer_id
-        assert float(data["amount"]) == 300.00
+        assert math.isclose(float(data["amount"]), 300.00, rel_tol=1e-9)
         assert data["description"] == "ID test transfer"
 
     def test_get_transfer_not_found(self, client: TestClient, user_auth):
@@ -447,9 +448,9 @@ class TestTransferManagement:
         data = response.json()
         assert data["wallet_id"] == wallet1_id
         assert data["wallet_name"] == "Wallet Summary Test 1"
-        assert float(data["total_sent"]) == 600.00  # 400 + 200
-        assert float(data["total_received"]) == 100.00
-        assert float(data["net_amount"]) == -500.00  # 100 - 600
+        assert math.isclose(float(data["total_sent"]), 600.00, rel_tol=1e-9)  # 400 + 200
+        assert math.isclose(float(data["total_received"]), 100.00, rel_tol=1e-9)
+        assert math.isclose(float(data["net_amount"]), -500.00, rel_tol=1e-9)  # 100 - 600
         assert data["transfer_count"] == 3
 
     def test_delete_transfer_success(self, client: TestClient, user_auth):
@@ -478,10 +479,10 @@ class TestTransferManagement:
         # Verify balances after transfer
         wallet1_response = client.get(f"/wallets/{wallet1_id}", headers=user_auth["headers"])
         wallet2_response = client.get(f"/wallets/{wallet2_id}", headers=user_auth["headers"])
-        
-        assert float(wallet1_response.json()["balance"]) == 700.00  # 1000 - 300
-        assert float(wallet2_response.json()["balance"]) == 800.00  # 500 + 300
-        
+
+        assert math.isclose(float(wallet1_response.json()["balance"]), 700.00, rel_tol=1e-9)  # 1000 - 300
+        assert math.isclose(float(wallet2_response.json()["balance"]), 800.00, rel_tol=1e-9)  # 500 + 300
+
         # Delete transfer
         response = client.delete(f"/transfers/{transfer_id}", headers=user_auth["headers"])
         
@@ -492,9 +493,9 @@ class TestTransferManagement:
         # Verify balances are reversed
         wallet1_response = client.get(f"/wallets/{wallet1_id}", headers=user_auth["headers"])
         wallet2_response = client.get(f"/wallets/{wallet2_id}", headers=user_auth["headers"])
-        
-        assert float(wallet1_response.json()["balance"]) == 1000.00  # Original balance
-        assert float(wallet2_response.json()["balance"]) == 500.00   # Original balance
+
+        assert math.isclose(float(wallet1_response.json()["balance"]), 1000.00, rel_tol=1e-9)  # Original balance
+        assert math.isclose(float(wallet2_response.json()["balance"]), 500.00, rel_tol=1e-9)   # Original balance
 
     def test_delete_transfer_not_found(self, client: TestClient, user_auth):
         """Test deleting non-existent transfer"""
@@ -527,7 +528,7 @@ class TestTransferManagement:
         
         assert response.status_code == 201
         data = response.json()
-        assert float(data["amount"]) == 250.00
+        assert math.isclose(float(data["amount"]), 250.00, rel_tol=1e-9)
         assert data["source_wallet_id"] == wallet1_id
         assert data["target_wallet_id"] == wallet2_id
         assert data["description"] == "Alternative endpoint test"
