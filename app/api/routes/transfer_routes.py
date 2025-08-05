@@ -51,21 +51,10 @@ async def create_transfer(
         response.target_wallet_name = transfer.target_wallet.name if transfer.target_wallet else None
         return response
     except ValueError as e:
-        if Constants.NOT_FOUND in str(e).lower():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
-        elif "insufficient funds" in str(e).lower():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 
 @router.get("/", response_model=TransferListResponse)
@@ -310,18 +299,7 @@ async def create_wallet_transfer(
         response.target_wallet_name = transfer.target_wallet.name if transfer.target_wallet else None
         return response
     except ValueError as e:
-        if Constants.NOT_FOUND in str(e).lower():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
-        elif "insufficient funds" in str(e).lower():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
