@@ -437,7 +437,6 @@ async def get_user_data_summary(
     from app.repositories.debt_repository import DebtRepository
     from app.repositories.transfer_repository import TransferRepository
     
-    user_service = UserService(db)
     wallet_service = WalletService(db)
     transaction_repo = TransactionRepository(db)
     debt_repo = DebtRepository(db)
