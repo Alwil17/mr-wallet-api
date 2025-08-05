@@ -34,8 +34,8 @@ class UserRepository:
             hashed_password=hashed_pw
         )
 
-        # Auto-assign admin role in debug mode for admin emails
-        if settings.APP_DEBUG and ("admin" in user_data.email):
+        # Auto-assign admin role for admin emails in debug or test mode
+        if (settings.APP_DEBUG or settings.APP_ENV.lower() in ["test", "testing"]) and ("admin" in user_data.email):
             user.role = "admin"
 
         self.db.add(user)
@@ -104,6 +104,26 @@ class UserRepository:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def update_password(self, user_id: int, new_password: str) -> bool:
+        """
+        Update user password
+
+        Args:
+            user_id (int): The user ID
+            new_password (str): The new password
+
+        Returns:
+            bool: True if updated successfully
+        """
+        user = self.get_by_id(user_id)
+        if not user:
+            return False
+            
+        user.hashed_password = hash_password(new_password)
+        user.updated_at = datetime.now()
+        self.db.commit()
+        return True
 
     def delete(self, user_id: int) -> bool:
         """
