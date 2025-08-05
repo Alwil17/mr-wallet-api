@@ -1,12 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.routes import auth_routes, wallet_routes, transaction_routes, debt_routes, transfer_routes
+from app.api.routes import (
+    auth_routes,
+    wallet_routes,
+    transaction_routes,
+    debt_routes,
+    transfer_routes,
+)
 
 app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.APP_VERSION,
-    debug=settings.APP_DEBUG
+    title=settings.APP_NAME, version=settings.APP_VERSION, debug=settings.APP_DEBUG
 )
 
 # Add CORS middleware
@@ -25,6 +29,7 @@ app.include_router(transaction_routes.router)
 app.include_router(debt_routes.router)
 app.include_router(transfer_routes.router)
 
+
 @app.get("/")
 async def root():
     """
@@ -33,8 +38,9 @@ async def root():
     return {
         "message": f"Welcome to {settings.APP_NAME}",
         "version": settings.APP_VERSION,
-        "status": "healthy"
+        "status": "healthy",
     }
+
 
 @app.get("/health")
 async def health_check():
