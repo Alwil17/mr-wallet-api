@@ -16,7 +16,7 @@ class TestTransactions:
             "amount": 1500.00,
             "category": "salary",
             "note": "Monthly salary",
-            "wallet_id": test_wallet.id
+            "wallet_id": test_wallet["id"]
         }
         
         response = client.post(
@@ -31,7 +31,7 @@ class TestTransactions:
         assert float(data["amount"]) == 1500.00
         assert data["category"] == "salary"
         assert data["note"] == "Monthly salary"
-        assert data["wallet_id"] == test_wallet.id
+        assert data["wallet_id"] == test_wallet["id"]
         assert "id" in data
         assert "created_at" in data
 
@@ -42,7 +42,7 @@ class TestTransactions:
             "amount": 150.00,
             "category": "food",
             "note": "Grocery shopping",
-            "wallet_id": test_wallet.id
+            "wallet_id": test_wallet["id"]
         }
         
         response = client.post(
@@ -64,7 +64,7 @@ class TestTransactions:
             "type": "income",
             "amount": 100.00,
             "category": "salary",
-            "wallet_id": test_wallet.id
+            "wallet_id": test_wallet["id"]
         }
         
         response = client.post("/transactions/", json=transaction_data)
@@ -163,14 +163,14 @@ class TestTransactions:
                 "amount": 1000.00,
                 "category": "salary",
                 "note": "Salary deposit",
-                "wallet_id": test_wallet.id
+                "wallet_id": test_wallet["id"]
             },
             {
                 "type": "expense",
                 "amount": 200.00,
                 "category": "food",
                 "note": "Groceries",
-                "wallet_id": test_wallet.id
+                "wallet_id": test_wallet["id"]
             }
         ]
         
@@ -200,21 +200,21 @@ class TestTransactions:
                 "amount": 1500.00,
                 "category": "salary",
                 "note": "Monthly salary",
-                "wallet_id": test_wallet.id
+                "wallet_id": test_wallet["id"]
             },
             {
                 "type": "expense",
                 "amount": 300.00,
                 "category": "food",
                 "note": "Restaurant",
-                "wallet_id": test_wallet.id
+                "wallet_id": test_wallet["id"]
             },
             {
                 "type": "expense",
                 "amount": 100.00,
                 "category": "transport",
                 "note": "Gas",
-                "wallet_id": test_wallet.id
+                "wallet_id": test_wallet["id"]
             }
         ]
         
@@ -257,7 +257,7 @@ class TestTransactions:
             "amount": 800.00,
             "category": "freelance",
             "note": "Web development project",
-            "wallet_id": test_wallet.id
+            "wallet_id": test_wallet["id"]
         }
         
         create_response = client.post(
@@ -294,7 +294,7 @@ class TestTransactions:
             "amount": 100.00,
             "category": "food",
             "note": "Original note",
-            "wallet_id": test_wallet.id
+            "wallet_id": test_wallet["id"]
         }
         
         create_response = client.post(
@@ -342,7 +342,7 @@ class TestTransactions:
             "type": "expense",
             "amount": 50.00,
             "category": "transport",
-            "wallet_id": test_wallet.id
+            "wallet_id": test_wallet["id"]
         }
         
         create_response = client.post(
@@ -375,25 +375,25 @@ class TestTransactions:
                 "type": "income",
                 "amount": 2000.00,
                 "category": "salary",
-                "wallet_id": test_wallet.id
+                "wallet_id": test_wallet["id"]
             },
             {
                 "type": "income",
                 "amount": 500.00,
                 "category": "freelance",
-                "wallet_id": test_wallet.id
+                "wallet_id": test_wallet["id"]
             },
             {
                 "type": "expense",
                 "amount": 300.00,
                 "category": "food",
-                "wallet_id": test_wallet.id
+                "wallet_id": test_wallet["id"]
             },
             {
                 "type": "expense",
                 "amount": 200.00,
                 "category": "transport",
-                "wallet_id": test_wallet.id
+                "wallet_id": test_wallet["id"]
             }
         ]
         
