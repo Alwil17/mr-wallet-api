@@ -190,7 +190,5 @@ class WalletService:
         Returns:
             List[WalletResponse]: List of wallets of the specified type
         """
-        all_wallets = self.repository.get_user_wallets(user_id)
-        filtered_wallets = [wallet for wallet in all_wallets if wallet.type == wallet_type]
-        
-        return [WalletResponse.model_validate(wallet) for wallet in filtered_wallets]
+        wallets = self.repository.get_wallets_by_type(user_id, wallet_type)
+        return [WalletResponse.model_validate(wallet) for wallet in wallets]

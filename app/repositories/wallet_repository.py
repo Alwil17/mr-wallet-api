@@ -198,3 +198,18 @@ class WalletRepository:
             "wallets_by_type": wallets_by_type,
             "most_recent_wallet": most_recent
         }
+
+    def get_wallets_by_type(self, user_id: int, wallet_type: str) -> List[Wallet]:
+        """
+        Get all wallets of a specific type for a user
+
+        Args:
+            user_id (int): The user ID
+            wallet_type (str): The wallet type to filter by
+
+        Returns:
+            List[Wallet]: List of wallets of the specified type
+        """
+        return self.db.query(Wallet).filter(
+            and_(Wallet.user_id == user_id, Wallet.type == wallet_type)
+        ).all()

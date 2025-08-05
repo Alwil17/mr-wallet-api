@@ -48,4 +48,10 @@ class WalletSummaryResponse(BaseModel):
     total_wallets: int
     total_balance: Decimal
     wallets_by_type: dict
+
+
+class AmountDTO(BaseModel):
+    """Schema for simple amount operations"""
+    amount: Decimal = Field(..., gt=0, description="Amount for the operation")
+    most_recent_wallet: Optional[WalletResponse] = None
     most_recent_wallet: Optional[WalletResponse] = None
