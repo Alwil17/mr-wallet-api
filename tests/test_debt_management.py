@@ -10,7 +10,9 @@ import math
 class TestDebtManagement:
     """Test debt management endpoints"""
 
-    def test_create_debt_owed_success(self, client: TestClient, user_auth, test_wallet_api):
+    def test_create_debt_owed_success(
+        self, client: TestClient, user_auth, test_wallet_api
+    ):
         """Test successful creation of debt (money owed to user)"""
         debt_data = {
             "amount": 500.00,
@@ -18,15 +20,11 @@ class TestDebtManagement:
             "type": "owed",
             "description": "Loan to John for car repair",
             "due_date": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
-        response = client.post(
-            "/debts/",
-            json=debt_data,
-            headers=user_auth["headers"]
-        )
-        
+
+        response = client.post("/debts/", json=debt_data, headers=user_auth["headers"])
+
         assert response.status_code == 201
         data = response.json()
         assert math.isclose(float(data["amount"]), 500.00, rel_tol=1e-9)
@@ -38,22 +36,20 @@ class TestDebtManagement:
         assert "id" in data
         assert "created_at" in data
 
-    def test_create_debt_given_success(self, client: TestClient, user_auth, test_wallet_api):
+    def test_create_debt_given_success(
+        self, client: TestClient, user_auth, test_wallet_api
+    ):
         """Test successful creation of debt (money user owes)"""
         debt_data = {
             "amount": 300.00,
             "borrower": "Jane Smith",
             "type": "given",
             "description": "Money borrowed from Jane",
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
-        response = client.post(
-            "/debts/",
-            json=debt_data,
-            headers=user_auth["headers"]
-        )
-        
+
+        response = client.post("/debts/", json=debt_data, headers=user_auth["headers"])
+
         assert response.status_code == 201
         data = response.json()
         assert math.isclose(float(data["amount"]), 300.00, rel_tol=1e-9)
@@ -68,11 +64,11 @@ class TestDebtManagement:
             "amount": 100.00,
             "borrower": "Someone",
             "type": "owed",
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
+
         response = client.post("/debts/", json=debt_data)
-        
+
         assert response.status_code == 401
 
     def test_create_debt_invalid_wallet(self, client: TestClient, user_auth):
@@ -81,50 +77,42 @@ class TestDebtManagement:
             "amount": 100.00,
             "borrower": "Someone",
             "type": "owed",
-            "wallet_id": 99999
+            "wallet_id": 99999,
         }
-        
-        response = client.post(
-            "/debts/",
-            json=debt_data,
-            headers=user_auth["headers"]
-        )
-        
+
+        response = client.post("/debts/", json=debt_data, headers=user_auth["headers"])
+
         assert response.status_code == 400
         assert "not found" in response.json()["detail"].lower()
 
-    def test_create_debt_invalid_type(self, client: TestClient, user_auth, test_wallet_api):
+    def test_create_debt_invalid_type(
+        self, client: TestClient, user_auth, test_wallet_api
+    ):
         """Test debt creation with invalid type"""
         debt_data = {
             "amount": 100.00,
             "borrower": "Someone",
             "type": "invalid_type",
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
-        response = client.post(
-            "/debts/",
-            json=debt_data,
-            headers=user_auth["headers"]
-        )
-        
+
+        response = client.post("/debts/", json=debt_data, headers=user_auth["headers"])
+
         assert response.status_code == 422  # Validation error
 
-    def test_create_debt_negative_amount(self, client: TestClient, user_auth, test_wallet_api):
+    def test_create_debt_negative_amount(
+        self, client: TestClient, user_auth, test_wallet_api
+    ):
         """Test debt creation with negative amount"""
         debt_data = {
             "amount": -100.00,
             "borrower": "Someone",
             "type": "owed",
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
-        response = client.post(
-            "/debts/",
-            json=debt_data,
-            headers=user_auth["headers"]
-        )
-        
+
+        response = client.post("/debts/", json=debt_data, headers=user_auth["headers"])
+
         assert response.status_code == 422  # Validation error
 
     def test_get_user_debts(self, client: TestClient, user_auth, test_wallet_api):
@@ -136,27 +124,23 @@ class TestDebtManagement:
                 "borrower": "Alice",
                 "type": "owed",
                 "description": "Loan to Alice",
-                "wallet_id": test_wallet_api["id"]
+                "wallet_id": test_wallet_api["id"],
             },
             {
                 "amount": 200.00,
                 "borrower": "Bob",
                 "type": "given",
                 "description": "Money borrowed from Bob",
-                "wallet_id": test_wallet_api["id"]
-            }
+                "wallet_id": test_wallet_api["id"],
+            },
         ]
-        
+
         for debt_data in debts:
-            client.post(
-                "/debts/",
-                json=debt_data,
-                headers=user_auth["headers"]
-            )
-        
+            client.post("/debts/", json=debt_data, headers=user_auth["headers"])
+
         # Get debts
         response = client.get("/debts/", headers=user_auth["headers"])
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "debts" in data
@@ -164,7 +148,9 @@ class TestDebtManagement:
         assert data["total"] >= 2  # At least the 2 we created
         assert len(data["debts"]) >= 2
 
-    def test_get_debts_with_filters(self, client: TestClient, user_auth, test_wallet_api):
+    def test_get_debts_with_filters(
+        self, client: TestClient, user_auth, test_wallet_api
+    ):
         """Test getting debts with filters"""
         # Create debts with different types
         debts = [
@@ -173,50 +159,42 @@ class TestDebtManagement:
                 "borrower": "Charlie",
                 "type": "owed",
                 "description": "Money owed by Charlie",
-                "wallet_id": test_wallet_api["id"]
+                "wallet_id": test_wallet_api["id"],
             },
             {
                 "amount": 300.00,
                 "borrower": "Diana",
                 "type": "given",
                 "description": "Money owed to Diana",
-                "wallet_id": test_wallet_api["id"]
+                "wallet_id": test_wallet_api["id"],
             },
             {
                 "amount": 150.00,
                 "borrower": "Eve",
                 "type": "owed",
                 "description": "Small loan to Eve",
-                "wallet_id": test_wallet_api["id"]
-            }
+                "wallet_id": test_wallet_api["id"],
+            },
         ]
-        
+
         for debt_data in debts:
-            client.post(
-                "/debts/",
-                json=debt_data,
-                headers=user_auth["headers"]
-            )
-        
+            client.post("/debts/", json=debt_data, headers=user_auth["headers"])
+
         # Filter by type (owed)
         response = client.get(
-            "/debts/",
-            params={"debt_type": "owed"},
-            headers=user_auth["headers"]
+            "/debts/", params={"debt_type": "owed"}, headers=user_auth["headers"]
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         owed_debts = [d for d in data["debts"] if d["type"] == "owed"]
         assert len(owed_debts) >= 2
-        
+
         # Filter by type (given)
         response = client.get(
-            "/debts/",
-            params={"debt_type": "given"},
-            headers=user_auth["headers"]
+            "/debts/", params={"debt_type": "given"}, headers=user_auth["headers"]
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         given_debts = [d for d in data["debts"] if d["type"] == "given"]
@@ -224,11 +202,9 @@ class TestDebtManagement:
 
         # Filter by borrower
         response = client.get(
-            "/debts/",
-            params={"borrower": "Charlie"},
-            headers=user_auth["headers"]
+            "/debts/", params={"borrower": "Charlie"}, headers=user_auth["headers"]
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         charlie_debts = [d for d in data["debts"] if "Charlie" in d["borrower"]]
@@ -242,22 +218,17 @@ class TestDebtManagement:
             "borrower": "Frank",
             "type": "owed",
             "description": "Big loan to Frank",
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
+
         create_response = client.post(
-            "/debts/",
-            json=debt_data,
-            headers=user_auth["headers"]
+            "/debts/", json=debt_data, headers=user_auth["headers"]
         )
         debt_id = create_response.json()["id"]
-        
+
         # Get the debt
-        response = client.get(
-            f"/debts/{debt_id}",
-            headers=user_auth["headers"]
-        )
-        
+        response = client.get(f"/debts/{debt_id}", headers=user_auth["headers"])
+
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == debt_id
@@ -267,7 +238,7 @@ class TestDebtManagement:
     def test_get_debt_not_found(self, client: TestClient, user_auth):
         """Test getting non-existent debt"""
         response = client.get("/debts/99999", headers=user_auth["headers"])
-        
+
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
 
@@ -279,29 +250,25 @@ class TestDebtManagement:
             "borrower": "Grace",
             "type": "owed",
             "description": "Original description",
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
+
         create_response = client.post(
-            "/debts/",
-            json=debt_data,
-            headers=user_auth["headers"]
+            "/debts/", json=debt_data, headers=user_auth["headers"]
         )
         debt_id = create_response.json()["id"]
-        
+
         # Update debt
         update_data = {
             "amount": 600.00,
             "description": "Updated description",
-            "due_date": (datetime.now(timezone.utc) + timedelta(days=15)).isoformat()
+            "due_date": (datetime.now(timezone.utc) + timedelta(days=15)).isoformat(),
         }
-        
+
         response = client.put(
-            f"/debts/{debt_id}",
-            json=update_data,
-            headers=user_auth["headers"]
+            f"/debts/{debt_id}", json=update_data, headers=user_auth["headers"]
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert math.isclose(float(data["amount"]), 600.00, rel_tol=1e-9)
@@ -311,13 +278,11 @@ class TestDebtManagement:
     def test_update_debt_not_found(self, client: TestClient, user_auth):
         """Test updating non-existent debt"""
         update_data = {"amount": 100.00}
-        
+
         response = client.put(
-            "/debts/99999",
-            json=update_data,
-            headers=user_auth["headers"]
+            "/debts/99999", json=update_data, headers=user_auth["headers"]
         )
-        
+
         assert response.status_code == 404
 
     def test_mark_debt_as_paid(self, client: TestClient, user_auth, test_wallet_api):
@@ -327,28 +292,21 @@ class TestDebtManagement:
             "amount": 250.00,
             "borrower": "Henry",
             "type": "owed",
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
+
         create_response = client.post(
-            "/debts/",
-            json=debt_data,
-            headers=user_auth["headers"]
+            "/debts/", json=debt_data, headers=user_auth["headers"]
         )
         debt_id = create_response.json()["id"]
-        
+
         # Mark as paid
-        payment_data = {
-            "is_paid": True,
-            "payment_note": "Paid in full on time"
-        }
-        
+        payment_data = {"is_paid": True, "payment_note": "Paid in full on time"}
+
         response = client.patch(
-            f"/debts/{debt_id}/payment",
-            json=payment_data,
-            headers=user_auth["headers"]
+            f"/debts/{debt_id}/payment", json=payment_data, headers=user_auth["headers"]
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["is_paid"] == True
@@ -360,34 +318,28 @@ class TestDebtManagement:
             "amount": 350.00,
             "borrower": "Ivy",
             "type": "given",
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
+
         create_response = client.post(
-            "/debts/",
-            json=debt_data,
-            headers=user_auth["headers"]
+            "/debts/", json=debt_data, headers=user_auth["headers"]
         )
         debt_id = create_response.json()["id"]
-        
+
         # Mark as paid first
         client.patch(
             f"/debts/{debt_id}/payment",
             json={"is_paid": True},
-            headers=user_auth["headers"]
+            headers=user_auth["headers"],
         )
-        
+
         # Mark as unpaid
-        payment_data = {
-            "is_paid": False
-        }
-        
+        payment_data = {"is_paid": False}
+
         response = client.patch(
-            f"/debts/{debt_id}/payment",
-            json=payment_data,
-            headers=user_auth["headers"]
+            f"/debts/{debt_id}/payment", json=payment_data, headers=user_auth["headers"]
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["is_paid"] == False
@@ -399,29 +351,24 @@ class TestDebtManagement:
             "amount": 150.00,
             "borrower": "Jack",
             "type": "owed",
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
+
         create_response = client.post(
-            "/debts/",
-            json=debt_data,
-            headers=user_auth["headers"]
+            "/debts/", json=debt_data, headers=user_auth["headers"]
         )
         debt_id = create_response.json()["id"]
-        
+
         # Delete debt
-        response = client.delete(
-            f"/debts/{debt_id}",
-            headers=user_auth["headers"]
-        )
-        
+        response = client.delete(f"/debts/{debt_id}", headers=user_auth["headers"])
+
         assert response.status_code == 200
         assert "deleted successfully" in response.json()["message"].lower()
 
     def test_delete_debt_not_found(self, client: TestClient, user_auth):
         """Test deleting non-existent debt"""
         response = client.delete("/debts/99999", headers=user_auth["headers"])
-        
+
         assert response.status_code == 404
 
     def test_get_debt_summary(self, client: TestClient, user_auth, test_wallet_api):
@@ -432,47 +379,45 @@ class TestDebtManagement:
                 "amount": 1000.00,
                 "borrower": "Kelly",
                 "type": "owed",
-                "wallet_id": test_wallet_api["id"]
+                "wallet_id": test_wallet_api["id"],
             },
             {
                 "amount": 500.00,
                 "borrower": "Liam",
                 "type": "owed",
-                "wallet_id": test_wallet_api["id"]
+                "wallet_id": test_wallet_api["id"],
             },
             {
                 "amount": 300.00,
                 "borrower": "Mia",
                 "type": "given",
-                "wallet_id": test_wallet_api["id"]
+                "wallet_id": test_wallet_api["id"],
             },
             {
                 "amount": 200.00,
                 "borrower": "Noah",
                 "type": "given",
-                "wallet_id": test_wallet_api["id"]
-            }
+                "wallet_id": test_wallet_api["id"],
+            },
         ]
-        
+
         debt_ids = []
         for debt_data in debts:
             response = client.post(
-                "/debts/",
-                json=debt_data,
-                headers=user_auth["headers"]
+                "/debts/", json=debt_data, headers=user_auth["headers"]
             )
             debt_ids.append(response.json()["id"])
-        
+
         # Mark one debt as paid
         client.patch(
             f"/debts/{debt_ids[0]}/payment",
             json={"is_paid": True},
-            headers=user_auth["headers"]
+            headers=user_auth["headers"],
         )
-        
+
         # Get summary
         response = client.get("/debts/summary", headers=user_auth["headers"])
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "total_debts" in data
@@ -483,60 +428,55 @@ class TestDebtManagement:
         assert "unpaid_debts" in data
         assert "overdue_debts" in data
         assert "debts_by_type" in data
-        
+
         # Verify calculations
         assert data["total_debts"] >= 4
         assert float(data["total_amount_owed"]) >= 1500.00  # 1000 + 500
-        assert float(data["total_amount_given"]) >= 500.00   # 300 + 200
-        assert float(data["net_position"]) >= 1000.00       # 1500 - 500
+        assert float(data["total_amount_given"]) >= 500.00  # 300 + 200
+        assert float(data["net_position"]) >= 1000.00  # 1500 - 500
         assert data["paid_debts"] >= 1
         assert data["unpaid_debts"] >= 3
 
     def test_get_wallet_debts(self, client: TestClient, user_auth):
         """Test getting debts for a specific wallet"""
         # Create two wallets
-        wallet1_data = {
-            "name": "Wallet 1",
-            "type": "checking",
-            "balance": 1000.00
-        }
-        
-        wallet2_data = {
-            "name": "Wallet 2", 
-            "type": "savings",
-            "balance": 2000.00
-        }
-        
-        wallet1_response = client.post("/wallets/", json=wallet1_data, headers=user_auth["headers"])
-        wallet2_response = client.post("/wallets/", json=wallet2_data, headers=user_auth["headers"])
-        
+        wallet1_data = {"name": "Wallet 1", "type": "checking", "balance": 1000.00}
+
+        wallet2_data = {"name": "Wallet 2", "type": "savings", "balance": 2000.00}
+
+        wallet1_response = client.post(
+            "/wallets/", json=wallet1_data, headers=user_auth["headers"]
+        )
+        wallet2_response = client.post(
+            "/wallets/", json=wallet2_data, headers=user_auth["headers"]
+        )
+
         wallet1_id = wallet1_response.json()["id"]
         wallet2_id = wallet2_response.json()["id"]
-        
+
         # Create debts for each wallet
         debt1 = {
             "amount": 500.00,
             "borrower": "Olivia",
             "type": "owed",
-            "wallet_id": wallet1_id
+            "wallet_id": wallet1_id,
         }
-        
+
         debt2 = {
             "amount": 300.00,
             "borrower": "Paul",
             "type": "given",
-            "wallet_id": wallet2_id
+            "wallet_id": wallet2_id,
         }
-        
+
         client.post("/debts/", json=debt1, headers=user_auth["headers"])
         client.post("/debts/", json=debt2, headers=user_auth["headers"])
-        
+
         # Get debts for wallet 1
         response = client.get(
-            f"/debts/wallet/{wallet1_id}",
-            headers=user_auth["headers"]
+            f"/debts/wallet/{wallet1_id}", headers=user_auth["headers"]
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
@@ -552,28 +492,26 @@ class TestDebtManagement:
             "borrower": "Quinn",
             "type": "owed",
             "due_date": (datetime.now(timezone.utc) - timedelta(days=5)).isoformat(),
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
+
         # Create a future debt
         future_debt = {
             "amount": 300.00,
             "borrower": "Rachel",
             "type": "owed",
             "due_date": (datetime.now(timezone.utc) + timedelta(days=10)).isoformat(),
-            "wallet_id": test_wallet_api["id"]
+            "wallet_id": test_wallet_api["id"],
         }
-        
+
         client.post("/debts/", json=overdue_debt, headers=user_auth["headers"])
         client.post("/debts/", json=future_debt, headers=user_auth["headers"])
-        
+
         # Filter for overdue debts only
         response = client.get(
-            "/debts/",
-            params={"overdue_only": True},
-            headers=user_auth["headers"]
+            "/debts/", params={"overdue_only": True}, headers=user_auth["headers"]
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         # Should contain at least the overdue debt we created
@@ -584,7 +522,11 @@ class TestDebtManagement:
         """Test debt operations without authentication"""
         operations = [
             ("GET", "/debts/", None),
-            ("POST", "/debts/", {"amount": 100, "borrower": "Someone", "type": "owed", "wallet_id": 1}),
+            (
+                "POST",
+                "/debts/",
+                {"amount": 100, "borrower": "Someone", "type": "owed", "wallet_id": 1},
+            ),
             ("GET", "/debts/1", None),
             ("PUT", "/debts/1", {"amount": 150}),
             ("PATCH", "/debts/1/payment", {"is_paid": True}),
@@ -592,7 +534,7 @@ class TestDebtManagement:
             ("GET", "/debts/summary", None),
             ("GET", "/debts/wallet/1", None),
         ]
-        
+
         for method, url, data in operations:
             if method == "GET":
                 response = client.get(url)
@@ -604,5 +546,5 @@ class TestDebtManagement:
                 response = client.patch(url, json=data)
             elif method == "DELETE":
                 response = client.delete(url)
-            
+
             assert response.status_code == 401
