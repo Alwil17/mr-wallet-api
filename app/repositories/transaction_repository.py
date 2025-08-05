@@ -104,39 +104,11 @@ class TransactionRepository:
             TransactionListResponse: Paginated transactions
         """
         query = self.db.query(Transaction).join(Wallet).filter(Wallet.user_id == user_id)
+        query = self._apply_transaction_filters(query, filters)
+        query = self._apply_transaction_sorting(query, sort_by, sort_order)
 
-        # Apply filters
-        if filters:
-            if filters.wallet_id:
-                query = query.filter(Transaction.wallet_id == filters.wallet_id)
-            if filters.type:
-                query = query.filter(Transaction.type == filters.type)
-            if filters.category:
-                query = query.filter(Transaction.category == filters.category)
-            if filters.start_date:
-                query = query.filter(Transaction.date >= filters.start_date)
-            if filters.end_date:
-                query = query.filter(Transaction.date <= filters.end_date)
-            if filters.min_amount:
-                query = query.filter(Transaction.amount >= filters.min_amount)
-            if filters.max_amount:
-                query = query.filter(Transaction.amount <= filters.max_amount)
-            if filters.search:
-                query = query.filter(Transaction.note.ilike(f"%{filters.search}%"))
-
-        # Apply sorting
-        if sort_order.lower() == "desc":
-            query = query.order_by(desc(getattr(Transaction, sort_by)))
-        else:
-            query = query.order_by(asc(getattr(Transaction, sort_by)))
-
-        # Get total count
         total = query.count()
-
-        # Apply pagination
         transactions = query.options(joinedload(Transaction.files)).offset(skip).limit(limit).all()
-
-        # Calculate pagination info
         total_pages = (total + limit - 1) // limit
         current_page = (skip // limit) + 1
 
@@ -147,6 +119,34 @@ class TransactionRepository:
             size=limit,
             total_pages=total_pages
         )
+
+    def _apply_transaction_filters(self, query, filters: Optional[TransactionFilterDTO]):
+        if not filters:
+            return query
+        if filters.wallet_id:
+            query = query.filter(Transaction.wallet_id == filters.wallet_id)
+        if filters.type:
+            query = query.filter(Transaction.type == filters.type)
+        if filters.category:
+            query = query.filter(Transaction.category == filters.category)
+        if filters.start_date:
+            query = query.filter(Transaction.date >= filters.start_date)
+        if filters.end_date:
+            query = query.filter(Transaction.date <= filters.end_date)
+        if filters.min_amount:
+            query = query.filter(Transaction.amount >= filters.min_amount)
+        if filters.max_amount:
+            query = query.filter(Transaction.amount <= filters.max_amount)
+        if filters.search:
+            query = query.filter(Transaction.note.ilike(f"%{filters.search}%"))
+        return query
+
+    def _apply_transaction_sorting(self, query, sort_by: str, sort_order: str):
+        sort_column = getattr(Transaction, sort_by)
+        if sort_order.lower() == "desc":
+            return query.order_by(desc(sort_column))
+        else:
+            return query.order_by(asc(sort_column))
 
     def update(self, transaction_id: int, update_data: TransactionUpdateDTO, user_id: int) -> Optional[Transaction]:
         """
