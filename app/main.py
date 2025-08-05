@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.routes import auth_routes, wallet_routes, transaction_routes
+from app.api.routes import auth_routes, wallet_routes, transaction_routes, debt_routes
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -22,6 +22,7 @@ app.add_middleware(
 app.include_router(auth_routes.router)
 app.include_router(wallet_routes.router)
 app.include_router(transaction_routes.router)
+app.include_router(debt_routes.router)
 
 @app.get("/")
 async def root():
