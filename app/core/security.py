@@ -161,8 +161,7 @@ def require_role(required_roles: List[str]):
         """
         if role not in required_roles:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
             )
         return role
 
@@ -175,7 +174,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
     Args:
         data (dict): Dictionary containing information to be encoded in the access token.
-        expires_delta (Optional[timedelta], optional): Optional timedelta specifying when the access token should expire. 
+        expires_delta (Optional[timedelta], optional): Optional timedelta specifying when the access token should expire.
                                                        Defaults to 30 minutes.
 
     Returns:
@@ -187,11 +186,15 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         expire = now + expires_delta
     else:
         expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({
-        "exp": expire,
-        "iat": now,  # Include issued at timestamp for uniqueness
-        "jti": secrets.token_urlsafe(16)  # Add a unique identifier to ensure token uniqueness
-    })
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": now,  # Include issued at timestamp for uniqueness
+            "jti": secrets.token_urlsafe(
+                16
+            ),  # Add a unique identifier to ensure token uniqueness
+        }
+    )
     encoded_jwt = jwt.encode(
         to_encode, settings.APP_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
     )
@@ -256,11 +259,11 @@ def verify_refresh_token(token: str, db: Session):
     # Handle timezone comparison properly
     current_time = datetime.now(tz=timezone.utc)
     expires_at = refresh_token.expires_at
-    
+
     # If expires_at is naive, assume it's UTC
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
-    
+
     if expires_at < current_time:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
