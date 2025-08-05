@@ -114,7 +114,7 @@ def get_transaction(
             detail=Constants.TRANSACTION_NOT_FOUND
         )
     
-    return TransactionResponse.from_orm(transaction)
+    return TransactionResponse.model_validate(transaction)
 
 
 @router.put("/{transaction_id}", response_model=TransactionResponse)
@@ -137,7 +137,7 @@ def update_transaction(
                 detail=Constants.TRANSACTION_NOT_FOUND
             )
         
-        return TransactionResponse.from_orm(transaction)
+        return TransactionResponse.model_validate(transaction)
         
     except ValueError as e:
         raise HTTPException(
@@ -186,7 +186,7 @@ def bulk_create_transactions(
     service = TransactionService(db)
     try:
         transactions = service.bulk_create_transactions(bulk_data, current_user.id)
-        return [TransactionResponse.from_orm(t) for t in transactions]
+        return [TransactionResponse.model_validate(t) for t in transactions]
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
