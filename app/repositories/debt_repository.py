@@ -218,7 +218,7 @@ class DebtRepository:
         unpaid_debts = total_debts - paid_debts
         
         # Count overdue debts
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         overdue_debts = sum(
             1 for debt in debts 
             if debt.due_date and debt.due_date < now and not debt.is_paid
