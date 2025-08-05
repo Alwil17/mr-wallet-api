@@ -256,7 +256,7 @@ class TestIntegration:
         assert gdpr_response.status_code == 200
         
         gdpr_data = gdpr_response.json()
-        assert gdpr_data["user"]["email"] == user.email
+        assert gdpr_data["user_info"]["email"] == user.email
         assert "wallets" in gdpr_data
         assert len(gdpr_data["wallets"]) == len(wallets)
 
