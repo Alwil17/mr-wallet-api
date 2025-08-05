@@ -212,10 +212,13 @@ class TestAuth:
         
         assert response.status_code == 200
         data = response.json()
-        assert data["user"]["email"] == test_user.email
-        assert data["user"]["name"] == test_user.name
+        assert data["user_info"]["email"] == test_user.email
+        assert data["user_info"]["name"] == test_user.name
         assert "wallets" in data
-        assert "refresh_tokens" in data
+        assert "transactions" in data
+        assert "debts" in data
+        assert "transfers" in data
+        assert "export_timestamp" in data
 
     def test_protected_route_with_valid_token(self, client: TestClient, auth_headers):
         """Test accessing protected route with valid token"""
