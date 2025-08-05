@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from decimal import Decimal
+import math
 
 from tests.utils.data_seeder import DataSeeder
 
@@ -56,8 +57,8 @@ class TestIntegration:
             headers=headers
         )
         assert credit_response.status_code == 200
-        assert float(credit_response.json()["balance"]) == 1500.00
-        
+        assert math.isclose(float(credit_response.json()["balance"]), 1500.00, rel_tol=1e-9)
+
         # Debit the account
         debit_response = client.post(
             f"/wallets/{wallet_id}/debit",
@@ -65,12 +66,12 @@ class TestIntegration:
             headers=headers
         )
         assert debit_response.status_code == 200
-        assert float(debit_response.json()["balance"]) == 1200.00
-        
+        assert math.isclose(float(debit_response.json()["balance"]), 1200.00, rel_tol=1e-9)
+
         # Check balance
         balance_response = client.get(f"/wallets/{wallet_id}/balance", headers=headers)
         assert balance_response.status_code == 200
-        assert float(balance_response.json()["balance"]) == 1200.00
+        assert math.isclose(float(balance_response.json()["balance"]), 1200.00, rel_tol=1e-9)
 
     def test_complete_scenario_with_seeder(self, client: TestClient, db: Session):
         """Test complete scenario with multiple users and wallets"""
