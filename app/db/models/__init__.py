@@ -7,4 +7,15 @@ from app.db.models.file import File, FileType
 from app.db.models.debt import Debt
 from app.db.models.transfer import Transfer
 
-__all__ = ["User", "RefreshToken", "Wallet", "Transaction", "TransactionType", "TransactionCategory", "File", "FileType", "Debt", "Transfer"]
+__all__ = [
+    "User",
+    "RefreshToken",
+    "Wallet",
+    "Transaction",
+    "TransactionType",
+    "TransactionCategory",
+    "File",
+    "FileType",
+    "Debt",
+    "Transfer",
+]
