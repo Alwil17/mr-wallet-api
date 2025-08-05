@@ -57,7 +57,7 @@ async def create_debt(
 async def get_user_debts(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
-    debt_type: Optional[str] = Query(None, regex="^(owed|given)$", description="Filter by debt type"),
+    debt_type: Optional[str] = Query(None, pattern=Constants.TRANSACTION_TYPE_REGEX, description="Filter by debt type"),
     is_paid: Optional[bool] = Query(None, description="Filter by payment status"),
     borrower: Optional[str] = Query(None, description="Filter by borrower name"),
     overdue_only: Optional[bool] = Query(False, description="Show only overdue debts"),
