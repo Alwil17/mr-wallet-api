@@ -1,8 +1,15 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from typing import Optional
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore"  # Allow extra fields from .env file
+    )
+    
     # Database
     DATABASE_URL: str = "postgresql://user:password@localhost/mr_wallet_db"
     
@@ -20,10 +27,6 @@ class Settings(BaseSettings):
     
     # CORS
     ALLOWED_ORIGINS: list = ["http://localhost:3000", "http://localhost:8080"]
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 
 settings = Settings()

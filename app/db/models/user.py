@@ -18,3 +18,4 @@ class User(Base):
 
     # Relationships
     refresh_tokens = relationship("RefreshToken", back_populates="user")
+    wallets = relationship("Wallet", back_populates="user", cascade="all, delete-orphan")

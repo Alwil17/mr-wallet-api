@@ -205,6 +205,26 @@ class UserService:
             self.repository.db.rollback()
             raise ValueError(f"Failed to delete user account: {str(e)}")
 
+    def change_password(self, user_id: int, new_password: str) -> bool:
+        """
+        Change user password
+
+        Args:
+            user_id (int): The user ID
+            new_password (str): The new password
+
+        Returns:
+            bool: True if password was changed successfully
+
+        Raises:
+            ValueError: If user not found
+        """
+        user = self.repository.get_by_id(user_id)
+        if not user:
+            raise ValueError(USER_NOT_FOUND)
+
+        return self.repository.update_password(user_id, new_password)
+
     def anonymize_user_data(self, user_id: int) -> dict:
         """
         Anonymize user data (GDPR right to anonymization)
