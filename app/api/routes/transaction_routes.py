@@ -2,6 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File as FileUpload, Form, Query
 from sqlalchemy.orm import Session
 
+from app.constants import Constants
 from app.core.security import get_current_user
 from app.db.base import get_db
 from app.db.models.user import User
@@ -43,14 +44,7 @@ def create_transaction(
 
 @router.get("/", response_model=TransactionListResponse)
 def get_transactions(
-    wallet_id: Optional[int] = Query(None),
-    category: Optional[str] = Query(None),
-    transaction_type: Optional[str] = Query(None),
-    date_from: Optional[str] = Query(None),
-    date_to: Optional[str] = Query(None),
-    amount_min: Optional[float] = Query(None),
-    amount_max: Optional[float] = Query(None),
-    search: Optional[str] = Query(None),
+    filters: TransactionFilterDTO = Depends(),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     sort_by: str = Query("date"),
@@ -61,25 +55,6 @@ def get_transactions(
     """
     Get user's transactions with filtering and pagination
     """
-    # Build filters
-    filters = TransactionFilterDTO()
-    if wallet_id:
-        filters.wallet_id = wallet_id
-    if category:
-        filters.category = category
-    if transaction_type:
-        filters.type = transaction_type
-    if date_from:
-        filters.start_date = date_from
-    if date_to:
-        filters.end_date = date_to
-    if amount_min:
-        filters.amount_min = amount_min
-    if amount_max:
-        filters.amount_max = amount_max
-    if search:
-        filters.search = search
-
     service = TransactionService(db)
     return service.get_user_transactions(
         current_user.id, 
@@ -136,7 +111,7 @@ def get_transaction(
     if not transaction:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transaction not found"
+            detail=Constants.TRANSACTION_NOT_FOUND
         )
     
     return TransactionResponse.from_orm(transaction)
@@ -159,7 +134,7 @@ def update_transaction(
         if not transaction:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Transaction not found"
+                detail=Constants.TRANSACTION_NOT_FOUND
             )
         
         return TransactionResponse.from_orm(transaction)
@@ -187,7 +162,7 @@ def delete_transaction(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Transaction not found"
+                detail=Constants.TRANSACTION_NOT_FOUND
             )
         
         return {"message": "Transaction deleted successfully"}
@@ -253,7 +228,7 @@ def upload_transaction_file(
     if not transaction:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transaction not found"
+            detail=Constants.TRANSACTION_NOT_FOUND
         )
 
     try:
@@ -282,7 +257,7 @@ def get_transaction_files(
     if not transaction:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transaction not found"
+            detail=Constants.TRANSACTION_NOT_FOUND
         )
 
     files = service.get_transaction_files(transaction_id, current_user.id)
