@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from decimal import Decimal
 from datetime import datetime
+from app.constants import Constants
 from app.schemas.transfer_dto import (
     TransferCreateDTO,
     TransferResponse,
@@ -50,7 +51,7 @@ async def create_transfer(
         response.target_wallet_name = transfer.target_wallet.name if transfer.target_wallet else None
         return response
     except ValueError as e:
-        if "not found" in str(e).lower():
+        if Constants.NOT_FOUND in str(e).lower():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=str(e)
@@ -255,7 +256,7 @@ async def delete_transfer(
         transfer_service.delete_transfer(transfer_id, current_user.id)
         return {"message": "Transfer deleted successfully and wallet balances have been reversed"}
     except ValueError as e:
-        if "not found" in str(e).lower():
+        if Constants.NOT_FOUND in str(e).lower():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=str(e)
@@ -309,7 +310,7 @@ async def create_wallet_transfer(
         response.target_wallet_name = transfer.target_wallet.name if transfer.target_wallet else None
         return response
     except ValueError as e:
-        if "not found" in str(e).lower():
+        if Constants.NOT_FOUND in str(e).lower():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=str(e)
