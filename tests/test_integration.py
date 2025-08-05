@@ -15,7 +15,7 @@ class TestIntegration:
         seeder = DataSeeder(db)
         
         # Create user with wallets using seeder
-        user, wallets = seeder.create_user_with_wallets(
+        user, _ = seeder.create_user_with_wallets(
             user_name="Integration Test User",
             user_email="integration@example.com",
             user_password="password123",
@@ -265,7 +265,7 @@ class TestIntegration:
         """Test account deletion when user has wallets"""
         seeder = DataSeeder(db)
         
-        user, wallets = seeder.create_user_with_wallets(
+        user, _ = seeder.create_user_with_wallets(
             user_name="Delete Account User",
             user_email="deleteaccount@example.com"
         )
