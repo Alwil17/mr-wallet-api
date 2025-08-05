@@ -6,3 +6,4 @@ class Constants:
     DEBT_NOT_FOUND = "Debt not found or not owned by user"
     USER_NOT_FOUND = "User not found"
     WALLET_NOT_FOUND = "Wallet not found"
+    TRANSACTION_TYPE_REGEX = "^(owed|given)$"
