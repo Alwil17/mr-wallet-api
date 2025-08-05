@@ -17,8 +17,7 @@ class Wallet(Base):
 
     # Relationships
     user = relationship("User", back_populates="wallets")
-    # TODO: Uncomment when Transaction model is implemented
-    # transactions = relationship("Transaction", back_populates="wallet", cascade="all, delete-orphan")
+    transactions = relationship("Transaction", back_populates="wallet", cascade="all, delete-orphan")
     # TODO: Uncomment when Debt model is implemented  
     # debts = relationship("Debt", back_populates="wallet", cascade="all, delete-orphan")
     # TODO: Uncomment when Transfer model is implemented
