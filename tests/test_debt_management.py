@@ -2,8 +2,9 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.db.models.debt import Debt
+import math
 
 
 class TestDebtManagement:
@@ -28,7 +29,7 @@ class TestDebtManagement:
         
         assert response.status_code == 201
         data = response.json()
-        assert float(data["amount"]) == 500.00
+        assert math.isclose(float(data["amount"]), 500.00, rel_tol=1e-9)
         assert data["borrower"] == "John Doe"
         assert data["type"] == "owed"
         assert data["description"] == "Loan to John for car repair"
@@ -55,7 +56,7 @@ class TestDebtManagement:
         
         assert response.status_code == 201
         data = response.json()
-        assert float(data["amount"]) == 300.00
+        assert math.isclose(float(data["amount"]), 300.00, rel_tol=1e-9)
         assert data["borrower"] == "Jane Smith"
         assert data["type"] == "given"
         assert data["description"] == "Money borrowed from Jane"
@@ -260,7 +261,7 @@ class TestDebtManagement:
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == debt_id
-        assert float(data["amount"]) == 750.00
+        assert math.isclose(float(data["amount"]), 750.00, rel_tol=1e-9)
         assert data["borrower"] == "Frank"
 
     def test_get_debt_not_found(self, client: TestClient, user_auth):
@@ -303,7 +304,7 @@ class TestDebtManagement:
         
         assert response.status_code == 200
         data = response.json()
-        assert float(data["amount"]) == 600.00
+        assert math.isclose(float(data["amount"]), 600.00, rel_tol=1e-9)
         assert data["description"] == "Updated description"
         assert data["due_date"] is not None
 
