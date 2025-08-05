@@ -23,21 +23,17 @@ def upgrade() -> None:
     op.create_table('transfers',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('amount', sa.Numeric(precision=10, scale=2), nullable=False),
-    sa.Column('description', sa.String(), nullable=True),
+    sa.Column('description', sa.Text(), nullable=True),
     sa.Column('source_wallet_id', sa.Integer(), nullable=False),
     sa.Column('target_wallet_id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['source_wallet_id'], ['wallets.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['target_wallet_id'], ['wallets.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_transfers_id'), 'transfers', ['id'], unique=False)
     op.create_index(op.f('ix_transfers_source_wallet_id'), 'transfers', ['source_wallet_id'], unique=False)
     op.create_index(op.f('ix_transfers_target_wallet_id'), 'transfers', ['target_wallet_id'], unique=False)
-    op.create_index(op.f('ix_transfers_user_id'), 'transfers', ['user_id'], unique=False)
     op.create_index(op.f('ix_transfers_created_at'), 'transfers', ['created_at'], unique=False)
     # ### end Alembic commands ###
 
