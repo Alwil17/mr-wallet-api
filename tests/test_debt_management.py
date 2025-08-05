@@ -292,7 +292,7 @@ class TestDebtManagement:
         update_data = {
             "amount": 600.00,
             "description": "Updated description",
-            "due_date": (datetime.utcnow() + timedelta(days=15)).isoformat()
+            "due_date": (datetime.now(timezone.utc) + timedelta(days=15)).isoformat()
         }
         
         response = client.put(
