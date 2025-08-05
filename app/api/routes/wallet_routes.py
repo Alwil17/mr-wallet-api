@@ -7,7 +7,8 @@ from app.schemas.wallet_dto import (
     WalletResponse,
     WalletListResponse,
     WalletBalanceUpdateDTO,
-    WalletSummaryResponse
+    WalletSummaryResponse,
+    AmountDTO
 )
 from app.schemas.user_dto import UserResponse
 from app.services.wallet_service import WalletService
@@ -218,7 +219,7 @@ async def update_wallet_balance(
             )
 
 
-@router.delete("/{wallet_id}", status_code=204)
+@router.delete("/{wallet_id}")
 async def delete_wallet(
     wallet_id: int,
     current_user: UserResponse = Depends(get_current_user),
@@ -232,12 +233,144 @@ async def delete_wallet(
         current_user (UserResponse): The current user from token
         db (Session): Database session
 
+    Returns:
+        dict: Success message
+
     Raises:
         HTTPException: If wallet not found or not owned by user
     """
     wallet_service = WalletService(db)
     try:
         wallet_service.delete_wallet(wallet_id, current_user.id)
+        return {"message": "Wallet deleted successfully"}
+    except ValueError as e:
+        if "balance must be zero" in str(e).lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e)
+            )
+
+
+@router.post("/{wallet_id}/credit", response_model=WalletResponse)
+async def credit_wallet(
+    wallet_id: int,
+    credit_data: AmountDTO,
+    current_user: UserResponse = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Credit amount to wallet.
+
+    Args:
+        wallet_id (int): The wallet ID
+        credit_data (AmountDTO): The credit amount data
+        current_user (UserResponse): The current user from token
+        db (Session): Database session
+
+    Returns:
+        WalletResponse: The updated wallet
+
+    Raises:
+        HTTPException: If wallet not found or not owned by user
+    """
+    wallet_service = WalletService(db)
+    try:
+        # Create credit operation (positive amount)
+        balance_update = WalletBalanceUpdateDTO(
+            operation="add",
+            amount=credit_data.amount
+        )
+        wallet = wallet_service.update_wallet_balance(wallet_id, balance_update, current_user.id)
+        return WalletResponse.model_validate(wallet)
+    except ValueError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e)
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+
+
+@router.post("/{wallet_id}/debit", response_model=WalletResponse)
+async def debit_wallet(
+    wallet_id: int,
+    debit_data: AmountDTO,
+    current_user: UserResponse = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Debit amount from wallet.
+
+    Args:
+        wallet_id (int): The wallet ID
+        debit_data (AmountDTO): The debit amount data
+        current_user (UserResponse): The current user from token
+        db (Session): Database session
+
+    Returns:
+        WalletResponse: The updated wallet
+
+    Raises:
+        HTTPException: If wallet not found, not owned by user, or insufficient funds
+    """
+    wallet_service = WalletService(db)
+    try:
+        # Create debit operation (negative amount)
+        balance_update = WalletBalanceUpdateDTO(
+            operation="subtract",
+            amount=debit_data.amount
+        )
+        wallet = wallet_service.update_wallet_balance(wallet_id, balance_update, current_user.id)
+        return WalletResponse.model_validate(wallet)
+    except ValueError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e)
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+
+
+@router.get("/{wallet_id}/balance")
+async def get_wallet_balance(
+    wallet_id: int,
+    current_user: UserResponse = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get wallet balance.
+
+    Args:
+        wallet_id (int): The wallet ID
+        current_user (UserResponse): The current user from token
+        db (Session): Database session
+
+    Returns:
+        dict: Wallet balance and name
+
+    Raises:
+        HTTPException: If wallet not found or not owned by user
+    """
+    wallet_service = WalletService(db)
+    try:
+        wallet = wallet_service.get_wallet_by_id(wallet_id, current_user.id)
+        return {
+            "balance": str(wallet.balance),
+            "wallet_name": wallet.name
+        }
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
