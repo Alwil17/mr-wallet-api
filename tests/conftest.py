@@ -197,3 +197,17 @@ def multiple_wallets(db: Session, test_user: User) -> list[Wallet]:
         db.refresh(wallet)
     
     return wallets
+
+
+@pytest.fixture
+def test_wallet(client, user_auth):
+    """Create a test wallet using the API"""
+    wallet_data = {
+        "name": "Test Wallet",
+        "type": "checking",
+        "balance": 1000.00
+    }
+    
+    response = client.post("/wallets/", json=wallet_data, headers=user_auth["headers"])
+    assert response.status_code == 201
+    return response.json()
