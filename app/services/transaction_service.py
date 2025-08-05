@@ -3,6 +3,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
 
+from app.constants import Constants
 from app.repositories.transaction_repository import TransactionRepository
 from app.repositories.file_repository import FileRepository
 from app.repositories.wallet_repository import WalletRepository
@@ -52,7 +53,7 @@ class TransactionService:
         try:
             wallet = self.wallet_repository.get_by_id(transaction_data.wallet_id, user_id)
             if not wallet:
-                raise ValueError("Wallet not found")
+                raise ValueError(Constants.WALLET_NOT_FOUND)
 
             if transaction_data.type.value == "income":
                 # Add to wallet balance for income
