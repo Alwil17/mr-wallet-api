@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+from app.constants import Constants
 from app.schemas.wallet_dto import (
     WalletCreateDTO,
     WalletUpdateDTO,
@@ -207,7 +208,7 @@ async def update_wallet_balance(
         wallet = wallet_service.update_wallet_balance(wallet_id, balance_update, current_user.id)
         return WalletResponse.model_validate(wallet)
     except ValueError as e:
-        if "not found" in str(e).lower():
+        if Constants.NOT_FOUND in str(e).lower():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=str(e)
@@ -288,7 +289,7 @@ async def credit_wallet(
         wallet = wallet_service.update_wallet_balance(wallet_id, balance_update, current_user.id)
         return WalletResponse.model_validate(wallet)
     except ValueError as e:
-        if "not found" in str(e).lower():
+        if Constants.NOT_FOUND in str(e).lower():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=str(e)
@@ -332,7 +333,7 @@ async def debit_wallet(
         wallet = wallet_service.update_wallet_balance(wallet_id, balance_update, current_user.id)
         return WalletResponse.model_validate(wallet)
     except ValueError as e:
-        if "not found" in str(e).lower():
+        if Constants.NOT_FOUND in str(e).lower():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=str(e)
