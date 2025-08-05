@@ -200,7 +200,7 @@ def multiple_wallets(db: Session, test_user: User) -> list[Wallet]:
 
 
 @pytest.fixture
-def test_wallet(client, user_auth):
+def test_wallet_api(client, user_auth):
     """Create a test wallet using the API"""
     wallet_data = {
         "name": "Test Wallet",
