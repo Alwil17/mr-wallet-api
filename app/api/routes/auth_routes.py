@@ -433,21 +433,35 @@ async def get_user_data_summary(
         dict: Data summary
     """
     from app.services.wallet_service import WalletService
+    from app.repositories.transaction_repository import TransactionRepository
+    from app.repositories.debt_repository import DebtRepository
+    from app.repositories.transfer_repository import TransferRepository
     
     user_service = UserService(db)
     wallet_service = WalletService(db)
+    transaction_repo = TransactionRepository(db)
+    debt_repo = DebtRepository(db)
+    transfer_repo = TransferRepository(db)
     
-    # Get wallet count
+    # Get wallet summary
     wallet_summary = wallet_service.get_wallet_summary(current_user.id)
+    
+    # Get actual counts from repositories
+    transactions_response = transaction_repo.get_user_transactions(current_user.id, limit=1)
+    transactions_count = transactions_response.total
+    
+    debts_count = debt_repo.count_user_debts(current_user.id)
+    
+    transfers_count = transfer_repo.count_user_transfers(current_user.id)
     
     return {
         "user_id": current_user.id,
         "email": current_user.email,
         "account_created": current_user.created_at,
         "wallets_count": wallet_summary.total_wallets,
-        "transactions_count": 0,  # TODO: Count actual transactions when implemented
-        "debts_count": 0,  # TODO: Count actual debts when implemented
-        "transfers_count": 0,  # TODO: Count actual transfers when implemented
+        "transactions_count": transactions_count,
+        "debts_count": debts_count,
+        "transfers_count": transfers_count,
         "total_balance": wallet_summary.total_balance,
         "data_summary_generated_at": datetime.now()
     }
