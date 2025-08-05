@@ -33,7 +33,7 @@ def create_transaction(
     service = TransactionService(db)
     try:
         transaction = service.create_transaction(transaction_data, current_user.id)
-        return TransactionResponse.from_orm(transaction)
+        return TransactionResponse.model_validate(transaction)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
