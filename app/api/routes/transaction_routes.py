@@ -258,7 +258,7 @@ def upload_transaction_file(
 
     try:
         file_record = service.add_file_to_transaction(file, transaction_id, file_type_enum, current_user.id)
-        return FileResponse.from_orm(file_record)
+        return FileResponse.model_validate(file_record)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
