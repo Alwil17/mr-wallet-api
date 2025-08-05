@@ -218,7 +218,7 @@ class TransferRepository:
         target_wallet = transfer.target_wallet
         
         # Check if reversing would cause negative balance (except for credit wallets)
-        if (source_wallet.type != "credit" and 
+        if (target_wallet.type != "credit" and 
             target_wallet.balance < transfer.amount):
             raise ValueError("Cannot reverse transfer: insufficient funds in target wallet")
 
