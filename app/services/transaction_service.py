@@ -51,7 +51,7 @@ class TransactionService:
 
         # Update wallet balance based on transaction type
         try:
-            wallet = self.wallet_repository.get_by_id(transaction_data.wallet_id, user_id)
+            wallet = self.wallet_repository.get_by_id_and_user(transaction_data.wallet_id, user_id)
             if not wallet:
                 raise ValueError(Constants.WALLET_NOT_FOUND)
 
@@ -140,7 +140,7 @@ class TransactionService:
             return None
 
         # Get the wallet
-        wallet = self.wallet_repository.get_by_id(original_transaction.wallet_id, user_id)
+        wallet = self.wallet_repository.get_by_id_and_user(original_transaction.wallet_id, user_id)
         if not wallet:
             raise ValueError("Wallet not found")
 
@@ -195,7 +195,7 @@ class TransactionService:
             return False
 
         # Get the wallet
-        wallet = self.wallet_repository.get_by_id(transaction.wallet_id, user_id)
+        wallet = self.wallet_repository.get_by_id_and_user(transaction.wallet_id, user_id)
         if not wallet:
             raise ValueError("Wallet not found")
 
@@ -263,7 +263,7 @@ class TransactionService:
         Validate wallets and balances for bulk transactions.
         """
         for transaction_data in transactions:
-            wallet = self.wallet_repository.get_by_id(transaction_data.wallet_id, user_id)
+            wallet = self.wallet_repository.get_by_id_and_user(transaction_data.wallet_id, user_id)
             if not wallet:
                 raise ValueError(f"Wallet {transaction_data.wallet_id} not found")
             if transaction_data.type.value == "expense":
@@ -285,7 +285,7 @@ class TransactionService:
                 wallet_balance_changes[wallet_id] -= transaction.amount
 
         for wallet_id, balance_change in wallet_balance_changes.items():
-            wallet = self.wallet_repository.get_by_id(wallet_id, user_id)
+            wallet = self.wallet_repository.get_by_id_and_user(wallet_id, user_id)
             wallet.balance += balance_change
 
     def add_file_to_transaction(self, file: UploadFile, transaction_id: int, file_type: FileType, user_id: int) -> File:
