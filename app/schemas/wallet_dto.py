@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 from decimal import Decimal
 from datetime import datetime
 from typing import Optional, List
@@ -10,17 +10,13 @@ class WalletCreateDTO(BaseModel):
     type: str = Field(..., min_length=1, max_length=50, description="Wallet type (e.g., checking, savings, cash, credit)")
     balance: Optional[Decimal] = Field(default=Decimal("0.00"), description="Initial balance")
 
-    @classmethod
-    def validate_balance(cls, values):
-        wallet_type = values.get("type", "").lower()
-        balance = values.get("balance")
+    @model_validator(mode="after")
+    def validate_balance(self):
+        wallet_type = self.type.lower() if self.type else ""
+        balance = self.balance
         if wallet_type != "credit" and balance is not None and balance < 0:
             raise ValueError("Initial balance cannot be negative for non-credit wallets.")
-        return values
-
-    # Pydantic v2: use model_validator
-    from pydantic import model_validator
-    _validate_balance = model_validator(mode="after")(validate_balance)
+        return self
 class WalletUpdateDTO(BaseModel):
     """Schema for updating wallet information"""
     name: Optional[str] = Field(None, min_length=1, max_length=100, description="Wallet name")
