@@ -65,7 +65,6 @@ class TransactionService:
                 if wallet.type != "credit" and new_balance < 0:
                     # Rollback transaction creation
                     self.db.delete(transaction)
-                    self.db.commit()
                     raise ValueError("Insufficient funds in wallet")
 
             # Update wallet balance
