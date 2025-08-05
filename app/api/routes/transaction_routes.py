@@ -19,7 +19,7 @@ from app.schemas.transaction_dto import (
     FileResponse
 )
 
-router = APIRouter(prefix="/transactions", tags=["transactions"])
+router = APIRouter(prefix="/transactions", tags=["Transactions Management"])
 
 
 @router.post("/", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
