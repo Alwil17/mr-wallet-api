@@ -10,7 +10,7 @@ from app.schemas.transfer_dto import (
     TransferListResponse,
     TransferSummaryResponse,
     TransferFilterDTO,
-    WalletTransferSummaryDTO
+    WalletTransferSummaryDTO,
 )
 from app.schemas.user_dto import UserResponse
 from app.services.transfer_service import TransferService
@@ -27,7 +27,7 @@ TRANSFER_NOT_FOUND = "Transfer not found"
 async def create_transfer(
     transfer_data: TransferCreateDTO,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Create a new transfer between wallets.
@@ -47,29 +47,46 @@ async def create_transfer(
     try:
         transfer = transfer_service.create_transfer(transfer_data, current_user.id)
         response = TransferResponse.model_validate(transfer)
-        response.source_wallet_name = transfer.source_wallet.name if transfer.source_wallet else None
-        response.target_wallet_name = transfer.target_wallet.name if transfer.target_wallet else None
+        response.source_wallet_name = (
+            transfer.source_wallet.name if transfer.source_wallet else None
+        )
+        response.target_wallet_name = (
+            transfer.target_wallet.name if transfer.target_wallet else None
+        )
         return response
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/", response_model=TransferListResponse)
 async def get_user_transfers(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
-    source_wallet_id: Optional[int] = Query(None, description="Filter by source wallet ID"),
-    target_wallet_id: Optional[int] = Query(None, description="Filter by target wallet ID"),
-    wallet_id: Optional[int] = Query(None, description="Filter by transfers involving this wallet"),
-    min_amount: Optional[Decimal] = Query(None, ge=0, description="Minimum transfer amount"),
-    max_amount: Optional[Decimal] = Query(None, gt=0, description="Maximum transfer amount"),
-    date_from: Optional[datetime] = Query(None, description="Filter transfers from this date"),
-    date_to: Optional[datetime] = Query(None, description="Filter transfers to this date"),
+    limit: int = Query(
+        100, ge=1, le=1000, description="Maximum number of records to return"
+    ),
+    source_wallet_id: Optional[int] = Query(
+        None, description="Filter by source wallet ID"
+    ),
+    target_wallet_id: Optional[int] = Query(
+        None, description="Filter by target wallet ID"
+    ),
+    wallet_id: Optional[int] = Query(
+        None, description="Filter by transfers involving this wallet"
+    ),
+    min_amount: Optional[Decimal] = Query(
+        None, ge=0, description="Minimum transfer amount"
+    ),
+    max_amount: Optional[Decimal] = Query(
+        None, gt=0, description="Maximum transfer amount"
+    ),
+    date_from: Optional[datetime] = Query(
+        None, description="Filter transfers from this date"
+    ),
+    date_to: Optional[datetime] = Query(
+        None, description="Filter transfers to this date"
+    ),
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get all transfers for the current user with optional filtering.
@@ -91,7 +108,7 @@ async def get_user_transfers(
         TransferListResponse: List of transfers with total count
     """
     transfer_service = TransferService(db)
-    
+
     # Create filter object
     filters = TransferFilterDTO(
         source_wallet_id=source_wallet_id,
@@ -100,16 +117,16 @@ async def get_user_transfers(
         min_amount=min_amount,
         max_amount=max_amount,
         date_from=date_from,
-        date_to=date_to
+        date_to=date_to,
     )
-    
+
     return transfer_service.get_user_transfers(current_user.id, filters, skip, limit)
 
 
 @router.get("/summary", response_model=TransferSummaryResponse)
 async def get_transfer_summary(
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get transfer summary for the current user.
@@ -129,7 +146,7 @@ async def get_transfer_summary(
 async def get_wallet_transfers(
     wallet_id: int,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get all transfers for a specific wallet.
@@ -149,17 +166,14 @@ async def get_wallet_transfers(
     try:
         return transfer_service.get_wallet_transfers(wallet_id, current_user.id)
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/wallet/{wallet_id}/summary", response_model=WalletTransferSummaryDTO)
 async def get_wallet_transfer_summary(
     wallet_id: int,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get transfer summary for a specific wallet.
@@ -179,17 +193,14 @@ async def get_wallet_transfer_summary(
     try:
         return transfer_service.get_wallet_transfer_summary(wallet_id, current_user.id)
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/{transfer_id}", response_model=TransferResponse)
 async def get_transfer(
     transfer_id: int,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get a specific transfer by ID.
@@ -207,16 +218,19 @@ async def get_transfer(
     """
     transfer_service = TransferService(db)
     transfer = transfer_service.get_transfer_by_id(transfer_id, current_user.id)
-    
+
     if not transfer:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=TRANSFER_NOT_FOUND
+            status_code=status.HTTP_404_NOT_FOUND, detail=TRANSFER_NOT_FOUND
         )
-    
+
     response = TransferResponse.model_validate(transfer)
-    response.source_wallet_name = transfer.source_wallet.name if transfer.source_wallet else None
-    response.target_wallet_name = transfer.target_wallet.name if transfer.target_wallet else None
+    response.source_wallet_name = (
+        transfer.source_wallet.name if transfer.source_wallet else None
+    )
+    response.target_wallet_name = (
+        transfer.target_wallet.name if transfer.target_wallet else None
+    )
     return response
 
 
@@ -224,7 +238,7 @@ async def get_transfer(
 async def delete_transfer(
     transfer_id: int,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Delete a transfer record and reverse the balance changes.
@@ -243,29 +257,29 @@ async def delete_transfer(
     transfer_service = TransferService(db)
     try:
         transfer_service.delete_transfer(transfer_id, current_user.id)
-        return {"message": "Transfer deleted successfully and wallet balances have been reversed"}
+        return {
+            "message": "Transfer deleted successfully and wallet balances have been reversed"
+        }
     except ValueError as e:
         if Constants.NOT_FOUND in str(e).lower():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 # Alternative endpoint for creating transfers via wallets
-@router.post("/wallets/{source_wallet_id}/transfer", response_model=TransferResponse, status_code=201)
+@router.post(
+    "/wallets/{source_wallet_id}/transfer",
+    response_model=TransferResponse,
+    status_code=201,
+)
 async def create_wallet_transfer(
     source_wallet_id: int,
     target_wallet_id: int = Query(..., description="ID of the target wallet"),
     amount: Decimal = Query(..., gt=0, description="Transfer amount"),
     description: Optional[str] = Query(None, description="Optional description"),
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Create a transfer from a specific wallet (alternative endpoint).
@@ -288,18 +302,19 @@ async def create_wallet_transfer(
         amount=amount,
         source_wallet_id=source_wallet_id,
         target_wallet_id=target_wallet_id,
-        description=description
+        description=description,
     )
-    
+
     transfer_service = TransferService(db)
     try:
         transfer = transfer_service.create_transfer(transfer_data, current_user.id)
         response = TransferResponse.model_validate(transfer)
-        response.source_wallet_name = transfer.source_wallet.name if transfer.source_wallet else None
-        response.target_wallet_name = transfer.target_wallet.name if transfer.target_wallet else None
+        response.source_wallet_name = (
+            transfer.source_wallet.name if transfer.source_wallet else None
+        )
+        response.target_wallet_name = (
+            transfer.target_wallet.name if transfer.target_wallet else None
+        )
         return response
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

@@ -10,7 +10,11 @@ from app.schemas.user_dto import (
     UserExportData,
     AccountDeletionRequest,
 )
-from app.schemas.auth_dto import TokenResponse, RefreshTokenRequest, PasswordChangeRequest
+from app.schemas.auth_dto import (
+    TokenResponse,
+    RefreshTokenRequest,
+    PasswordChangeRequest,
+)
 from app.services.user_service import UserService
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from app.core.security import (
@@ -18,7 +22,7 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     verify_refresh_token,
-    verify_password
+    verify_password,
 )
 from app.db.base import get_db
 from sqlalchemy.orm import Session
@@ -51,7 +55,7 @@ async def login_for_access_token(
     """
     user_service = UserService(db)
     user = user_service.authenticate_user(form_data.username, form_data.password)
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -62,16 +66,15 @@ async def login_for_access_token(
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.email, "role": user.role, "user_id": user.id}, expires_delta=access_token_expires
+        data={"sub": user.email, "role": user.role, "user_id": user.id},
+        expires_delta=access_token_expires,
     )
 
     # Create refresh token
     refresh_token = create_refresh_token(user.id, db)
 
     return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        token_type="bearer"
+        access_token=access_token, refresh_token=refresh_token, token_type="bearer"
     )
 
 
@@ -92,7 +95,7 @@ async def refresh_token(token_data: RefreshTokenRequest, db: Session = Depends(g
     """
     # Verify refresh token
     user_id = verify_refresh_token(token_data.refresh_token, db)
-    
+
     # Get user
     user_service = UserService(db)
     user = user_service.get_user_by_id(user_id)
@@ -110,15 +113,14 @@ async def refresh_token(token_data: RefreshTokenRequest, db: Session = Depends(g
     # Create new tokens
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.email, "role": user.role, "user_id": user.id}, expires_delta=access_token_expires
+        data={"sub": user.email, "role": user.role, "user_id": user.id},
+        expires_delta=access_token_expires,
     )
-    
+
     new_refresh_token = create_refresh_token(user.id, db)
 
     return TokenResponse(
-        access_token=access_token,
-        refresh_token=new_refresh_token,
-        token_type="bearer"
+        access_token=access_token, refresh_token=new_refresh_token, token_type="bearer"
     )
 
 
@@ -141,7 +143,7 @@ async def logout(token_data: RefreshTokenRequest, db: Session = Depends(get_db))
     verify_refresh_token(token_data.refresh_token, db)
     token_repo = RefreshTokenRepository(db)
     token_repo.revoke(token_data.refresh_token)
-    
+
     return {"message": "Successfully logged out"}
 
 
@@ -165,10 +167,7 @@ def register_user(user_data: UserCreateDTO, db: Session = Depends(get_db)):
         user = user_service.create_user(user_data)
         return UserResponse.model_validate(user)
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/profile", response_model=UserResponse)
@@ -207,13 +206,12 @@ async def edit_current_user(
     """
     user_service = UserService(db)
     updated_user = user_service.update_user(current_user.id, update_data)
-    
+
     if not updated_user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
-    
+
     return UserResponse.model_validate(updated_user)
 
 
@@ -227,7 +225,7 @@ async def change_password(
     Change user password.
 
     Args:
-        password_data (PasswordChangeRequest): The password change data  
+        password_data (PasswordChangeRequest): The password change data
         db (Session): Database session
         current_user (UserResponse): The current user from token
 
@@ -238,23 +236,24 @@ async def change_password(
         HTTPException: If current password is incorrect
     """
     user_service = UserService(db)
-    
+
     # Verify current password
     user = user_service.get_user_by_id(current_user.id)
-    if not user or not verify_password(password_data.current_password, user.hashed_password):
+    if not user or not verify_password(
+        password_data.current_password, user.hashed_password
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect"
+            detail="Current password is incorrect",
         )
-    
+
     # Update password
     success = user_service.change_password(current_user.id, password_data.new_password)
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=USER_NOT_FOUND
+            status_code=status.HTTP_404_NOT_FOUND, detail=USER_NOT_FOUND
         )
-    
+
     return {"message": "Password updated successfully"}
 
 
@@ -278,13 +277,12 @@ async def delete_account(
     """
     user_service = UserService(db)
     success = user_service.delete_user(current_user.id)
-    
+
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=USER_NOT_FOUND
+            status_code=status.HTTP_404_NOT_FOUND, detail=USER_NOT_FOUND
         )
-    
+
     return {"message": "Account deleted successfully"}
 
 
@@ -311,10 +309,7 @@ async def export_user_data(
         export_data = user_service.export_user_data(current_user.id)
         return export_data
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get("/export-data/download")
@@ -336,25 +331,22 @@ async def download_user_data(
         HTTPException: If export fails
     """
     from fastapi.responses import JSONResponse
-    
+
     user_service = UserService(db)
     try:
         export_data = user_service.export_user_data(current_user.id)
-        
+
         # Convert to dict for JSON response
         data_dict = export_data.model_dump()
-        
+
         return JSONResponse(
             content=data_dict,
             headers={
                 "Content-Disposition": f"attachment; filename=user_data_{current_user.id}.json"
-            }
+            },
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.delete("/delete-account")
@@ -382,10 +374,7 @@ async def delete_user_account(
         result = user_service.delete_user_account(current_user.id, deletion_request)
         return result
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/anonymize-account")
@@ -411,10 +400,7 @@ async def anonymize_user_account(
         result = user_service.anonymize_user_data(current_user.id)
         return result
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/data-summary")
@@ -436,23 +422,25 @@ async def get_user_data_summary(
     from app.repositories.transaction_repository import TransactionRepository
     from app.repositories.debt_repository import DebtRepository
     from app.repositories.transfer_repository import TransferRepository
-    
+
     wallet_service = WalletService(db)
     transaction_repo = TransactionRepository(db)
     debt_repo = DebtRepository(db)
     transfer_repo = TransferRepository(db)
-    
+
     # Get wallet summary
     wallet_summary = wallet_service.get_wallet_summary(current_user.id)
-    
+
     # Get actual counts from repositories
-    transactions_response = transaction_repo.get_user_transactions(current_user.id, limit=1)
+    transactions_response = transaction_repo.get_user_transactions(
+        current_user.id, limit=1
+    )
     transactions_count = transactions_response.total
-    
+
     debts_count = debt_repo.count_user_debts(current_user.id)
-    
+
     transfers_count = transfer_repo.count_user_transfers(current_user.id)
-    
+
     return {
         "user_id": current_user.id,
         "email": current_user.email,
@@ -462,5 +450,5 @@ async def get_user_data_summary(
         "debts_count": debts_count,
         "transfers_count": transfers_count,
         "total_balance": wallet_summary.total_balance,
-        "data_summary_generated_at": datetime.now()
+        "data_summary_generated_at": datetime.now(),
     }

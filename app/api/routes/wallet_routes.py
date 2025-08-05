@@ -9,7 +9,7 @@ from app.schemas.wallet_dto import (
     WalletListResponse,
     WalletBalanceUpdateDTO,
     WalletSummaryResponse,
-    AmountDTO
+    AmountDTO,
 )
 from app.schemas.user_dto import UserResponse
 from app.services.wallet_service import WalletService
@@ -26,7 +26,7 @@ WALLET_NOT_FOUND = "Wallet not found"
 async def create_wallet(
     wallet_data: WalletCreateDTO,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Create a new wallet for the current user.
@@ -47,18 +47,17 @@ async def create_wallet(
         wallet = wallet_service.create_wallet(wallet_data, current_user.id)
         return WalletResponse.model_validate(wallet)
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/", response_model=WalletListResponse)
 async def get_user_wallets(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
+    limit: int = Query(
+        100, ge=1, le=1000, description="Maximum number of records to return"
+    ),
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get all wallets for the current user.
@@ -79,7 +78,7 @@ async def get_user_wallets(
 @router.get("/summary", response_model=WalletSummaryResponse)
 async def get_wallet_summary(
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get wallet summary for the current user.
@@ -99,7 +98,7 @@ async def get_wallet_summary(
 async def get_wallets_by_type(
     wallet_type: str,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get all wallets of a specific type for the current user.
@@ -120,7 +119,7 @@ async def get_wallets_by_type(
 async def get_wallet(
     wallet_id: int,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get a specific wallet by ID.
@@ -138,13 +137,12 @@ async def get_wallet(
     """
     wallet_service = WalletService(db)
     wallet = wallet_service.get_wallet_by_id(wallet_id, current_user.id)
-    
+
     if not wallet:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=WALLET_NOT_FOUND
+            status_code=status.HTTP_404_NOT_FOUND, detail=WALLET_NOT_FOUND
         )
-    
+
     return WalletResponse.model_validate(wallet)
 
 
@@ -153,7 +151,7 @@ async def update_wallet(
     wallet_id: int,
     wallet_data: WalletUpdateDTO,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Update a wallet.
@@ -175,10 +173,7 @@ async def update_wallet(
         wallet = wallet_service.update_wallet(wallet_id, wallet_data, current_user.id)
         return WalletResponse.model_validate(wallet)
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.patch("/{wallet_id}/balance", response_model=WalletResponse)
@@ -186,7 +181,7 @@ async def update_wallet_balance(
     wallet_id: int,
     balance_update: WalletBalanceUpdateDTO,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Update wallet balance.
@@ -205,26 +200,22 @@ async def update_wallet_balance(
     """
     wallet_service = WalletService(db)
     try:
-        wallet = wallet_service.update_wallet_balance(wallet_id, balance_update, current_user.id)
+        wallet = wallet_service.update_wallet_balance(
+            wallet_id, balance_update, current_user.id
+        )
         return WalletResponse.model_validate(wallet)
     except ValueError as e:
         if Constants.NOT_FOUND in str(e).lower():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.delete("/{wallet_id}")
 async def delete_wallet(
     wallet_id: int,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Delete a wallet.
@@ -246,15 +237,9 @@ async def delete_wallet(
         return {"message": "Wallet deleted successfully"}
     except ValueError as e:
         if "balance must be zero" in str(e).lower():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
         else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.post("/{wallet_id}/credit", response_model=WalletResponse)
@@ -262,7 +247,7 @@ async def credit_wallet(
     wallet_id: int,
     credit_data: AmountDTO,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Credit amount to wallet.
@@ -283,22 +268,17 @@ async def credit_wallet(
     try:
         # Create credit operation (positive amount)
         balance_update = WalletBalanceUpdateDTO(
-            operation="add",
-            amount=credit_data.amount
+            operation="add", amount=credit_data.amount
         )
-        wallet = wallet_service.update_wallet_balance(wallet_id, balance_update, current_user.id)
+        wallet = wallet_service.update_wallet_balance(
+            wallet_id, balance_update, current_user.id
+        )
         return WalletResponse.model_validate(wallet)
     except ValueError as e:
         if Constants.NOT_FOUND in str(e).lower():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/{wallet_id}/debit", response_model=WalletResponse)
@@ -306,7 +286,7 @@ async def debit_wallet(
     wallet_id: int,
     debit_data: AmountDTO,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Debit amount from wallet.
@@ -327,29 +307,24 @@ async def debit_wallet(
     try:
         # Create debit operation (negative amount)
         balance_update = WalletBalanceUpdateDTO(
-            operation="subtract",
-            amount=debit_data.amount
+            operation="subtract", amount=debit_data.amount
         )
-        wallet = wallet_service.update_wallet_balance(wallet_id, balance_update, current_user.id)
+        wallet = wallet_service.update_wallet_balance(
+            wallet_id, balance_update, current_user.id
+        )
         return WalletResponse.model_validate(wallet)
     except ValueError as e:
         if Constants.NOT_FOUND in str(e).lower():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/{wallet_id}/balance")
 async def get_wallet_balance(
     wallet_id: int,
     current_user: UserResponse = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get wallet balance.
@@ -370,15 +345,8 @@ async def get_wallet_balance(
         wallet = wallet_service.get_wallet_by_id(wallet_id, current_user.id)
         if wallet is None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Wallet not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Wallet not found"
             )
-        return {
-            "balance": str(wallet.balance),
-            "wallet_name": wallet.name
-        }
+        return {"balance": str(wallet.balance), "wallet_name": wallet.name}
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
