@@ -7,12 +7,12 @@ from decimal import Decimal
 from app.db.models.transaction import Transaction, TransactionType, TransactionCategory
 from app.db.models.wallet import Wallet
 from app.schemas.transaction_dto import (
-    TransactionCreateDTO, 
-    TransactionUpdateDTO, 
+    TransactionCreateDTO,
+    TransactionUpdateDTO,
     TransactionFilterDTO,
     TransactionListResponse,
     TransactionSummaryResponse,
-    TransactionStatsResponse
+    TransactionStatsResponse,
 )
 
 
@@ -26,7 +26,9 @@ class TransactionRepository:
         """
         self.db = db
 
-    def create(self, transaction_data: TransactionCreateDTO, user_id: int) -> Transaction:
+    def create(
+        self, transaction_data: TransactionCreateDTO, user_id: int
+    ) -> Transaction:
         """
         Create a new transaction
 
@@ -36,15 +38,19 @@ class TransactionRepository:
 
         Returns:
             Transaction: The created transaction
-            
+
         Raises:
             ValueError: If wallet not found or not owned by user
         """
         # Verify wallet ownership
-        wallet = self.db.query(Wallet).filter(
-            and_(Wallet.id == transaction_data.wallet_id, Wallet.user_id == user_id)
-        ).first()
-        
+        wallet = (
+            self.db.query(Wallet)
+            .filter(
+                and_(Wallet.id == transaction_data.wallet_id, Wallet.user_id == user_id)
+            )
+            .first()
+        )
+
         if not wallet:
             raise ValueError("Wallet not found or not owned by user")
 
@@ -54,7 +60,7 @@ class TransactionRepository:
             category=transaction_data.category,
             note=transaction_data.note,
             date=transaction_data.date or datetime.now(),
-            wallet_id=transaction_data.wallet_id
+            wallet_id=transaction_data.wallet_id,
         )
 
         self.db.add(transaction)
@@ -73,21 +79,22 @@ class TransactionRepository:
         Returns:
             Optional[Transaction]: The transaction or None if not found
         """
-        return self.db.query(Transaction).join(Wallet).filter(
-            and_(
-                Transaction.id == transaction_id,
-                Wallet.user_id == user_id
-            )
-        ).options(joinedload(Transaction.files)).first()
+        return (
+            self.db.query(Transaction)
+            .join(Wallet)
+            .filter(and_(Transaction.id == transaction_id, Wallet.user_id == user_id))
+            .options(joinedload(Transaction.files))
+            .first()
+        )
 
     def get_user_transactions(
-        self, 
-        user_id: int, 
+        self,
+        user_id: int,
         filters: TransactionFilterDTO = None,
-        skip: int = 0, 
+        skip: int = 0,
         limit: int = 100,
         sort_by: str = "date",
-        sort_order: str = "desc"
+        sort_order: str = "desc",
     ) -> TransactionListResponse:
         """
         Get user's transactions with filtering and pagination
@@ -103,12 +110,16 @@ class TransactionRepository:
         Returns:
             TransactionListResponse: Paginated transactions
         """
-        query = self.db.query(Transaction).join(Wallet).filter(Wallet.user_id == user_id)
+        query = (
+            self.db.query(Transaction).join(Wallet).filter(Wallet.user_id == user_id)
+        )
         query = self._apply_transaction_filters(query, filters)
         query = self._apply_transaction_sorting(query, sort_by, sort_order)
 
         total = query.count()
-        transactions = query.options(joinedload(Transaction.files)).offset(skip).limit(limit).all()
+        transactions = (
+            query.options(joinedload(Transaction.files)).offset(skip).limit(limit).all()
+        )
         total_pages = (total + limit - 1) // limit
         current_page = (skip // limit) + 1
 
@@ -117,10 +128,12 @@ class TransactionRepository:
             total=total,
             page=current_page,
             size=limit,
-            total_pages=total_pages
+            total_pages=total_pages,
         )
 
-    def _apply_transaction_filters(self, query, filters: Optional[TransactionFilterDTO]):
+    def _apply_transaction_filters(
+        self, query, filters: Optional[TransactionFilterDTO]
+    ):
         if not filters:
             return query
         if filters.wallet_id:
@@ -148,7 +161,9 @@ class TransactionRepository:
         else:
             return query.order_by(asc(sort_column))
 
-    def update(self, transaction_id: int, update_data: TransactionUpdateDTO, user_id: int) -> Optional[Transaction]:
+    def update(
+        self, transaction_id: int, update_data: TransactionUpdateDTO, user_id: int
+    ) -> Optional[Transaction]:
         """
         Update a transaction
 
@@ -193,7 +208,9 @@ class TransactionRepository:
         self.db.commit()
         return True
 
-    def get_transaction_summary(self, user_id: int, filters: TransactionFilterDTO = None) -> TransactionSummaryResponse:
+    def get_transaction_summary(
+        self, user_id: int, filters: TransactionFilterDTO = None
+    ) -> TransactionSummaryResponse:
         """
         Get transaction summary statistics
 
@@ -204,7 +221,9 @@ class TransactionRepository:
         Returns:
             TransactionSummaryResponse: Summary statistics
         """
-        query = self.db.query(Transaction).join(Wallet).filter(Wallet.user_id == user_id)
+        query = (
+            self.db.query(Transaction).join(Wallet).filter(Wallet.user_id == user_id)
+        )
 
         # Apply filters
         if filters:
@@ -218,8 +237,12 @@ class TransactionRepository:
         transactions = query.all()
 
         # Calculate summary
-        total_income = sum(t.amount for t in transactions if t.type == TransactionType.INCOME)
-        total_expenses = sum(t.amount for t in transactions if t.type == TransactionType.EXPENSE)
+        total_income = sum(
+            t.amount for t in transactions if t.type == TransactionType.INCOME
+        )
+        total_expenses = sum(
+            t.amount for t in transactions if t.type == TransactionType.EXPENSE
+        )
         net_amount = total_income - total_expenses
 
         # Group by category
@@ -234,13 +257,17 @@ class TransactionRepository:
         # Group by type
         type_stats = {
             TransactionType.INCOME.value: {
-                "count": len([t for t in transactions if t.type == TransactionType.INCOME]),
-                "total": total_income
+                "count": len(
+                    [t for t in transactions if t.type == TransactionType.INCOME]
+                ),
+                "total": total_income,
             },
             TransactionType.EXPENSE.value: {
-                "count": len([t for t in transactions if t.type == TransactionType.EXPENSE]),
-                "total": total_expenses
-            }
+                "count": len(
+                    [t for t in transactions if t.type == TransactionType.EXPENSE]
+                ),
+                "total": total_expenses,
+            },
         }
 
         return TransactionSummaryResponse(
@@ -249,10 +276,12 @@ class TransactionRepository:
             total_expenses=total_expenses,
             net_amount=net_amount,
             transactions_by_category=category_stats,
-            transactions_by_type=type_stats
+            transactions_by_type=type_stats,
         )
 
-    def bulk_create(self, transactions_data: List[TransactionCreateDTO], user_id: int) -> List[Transaction]:
+    def bulk_create(
+        self, transactions_data: List[TransactionCreateDTO], user_id: int
+    ) -> List[Transaction]:
         """
         Create multiple transactions in bulk
 
@@ -262,20 +291,24 @@ class TransactionRepository:
 
         Returns:
             List[Transaction]: List of created transactions
-            
+
         Raises:
             ValueError: If any wallet not found or not owned by user
         """
         # Verify all wallets exist and are owned by user
         wallet_ids = [t.wallet_id for t in transactions_data]
-        wallets = self.db.query(Wallet).filter(
-            and_(Wallet.id.in_(wallet_ids), Wallet.user_id == user_id)
-        ).all()
-        
+        wallets = (
+            self.db.query(Wallet)
+            .filter(and_(Wallet.id.in_(wallet_ids), Wallet.user_id == user_id))
+            .all()
+        )
+
         wallet_id_set = {w.id for w in wallets}
         for transaction_data in transactions_data:
             if transaction_data.wallet_id not in wallet_id_set:
-                raise ValueError(f"Wallet {transaction_data.wallet_id} not found or not owned by user")
+                raise ValueError(
+                    f"Wallet {transaction_data.wallet_id} not found or not owned by user"
+                )
 
         # Create transactions
         transactions = []
@@ -286,7 +319,7 @@ class TransactionRepository:
                 category=transaction_data.category,
                 note=transaction_data.note,
                 date=transaction_data.date or datetime.now(),
-                wallet_id=transaction_data.wallet_id
+                wallet_id=transaction_data.wallet_id,
             )
             transactions.append(transaction)
             self.db.add(transaction)
@@ -294,10 +327,12 @@ class TransactionRepository:
         self.db.commit()
         for transaction in transactions:
             self.db.refresh(transaction)
-        
+
         return transactions
 
-    def get_transactions_by_wallet(self, wallet_id: int, user_id: int) -> List[Transaction]:
+    def get_transactions_by_wallet(
+        self, wallet_id: int, user_id: int
+    ) -> List[Transaction]:
         """
         Get all transactions for a specific wallet
 
@@ -308,9 +343,11 @@ class TransactionRepository:
         Returns:
             List[Transaction]: List of transactions
         """
-        return self.db.query(Transaction).join(Wallet).filter(
-            and_(
-                Transaction.wallet_id == wallet_id,
-                Wallet.user_id == user_id
-            )
-        ).options(joinedload(Transaction.files)).order_by(desc(Transaction.date)).all()
+        return (
+            self.db.query(Transaction)
+            .join(Wallet)
+            .filter(and_(Transaction.wallet_id == wallet_id, Wallet.user_id == user_id))
+            .options(joinedload(Transaction.files))
+            .order_by(desc(Transaction.date))
+            .all()
+        )

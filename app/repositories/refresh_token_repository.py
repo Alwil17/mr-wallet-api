@@ -27,9 +27,7 @@ class RefreshTokenRepository:
             RefreshToken: The created refresh token
         """
         refresh_token = RefreshToken(
-            user_id=user_id,
-            token=token,
-            expires_at=expires_at
+            user_id=user_id, token=token, expires_at=expires_at
         )
         self.db.add(refresh_token)
         self.db.commit()
@@ -78,9 +76,10 @@ class RefreshTokenRepository:
         Returns:
             int: Number of tokens revoked
         """
-        count = self.db.query(RefreshToken).filter(
-            RefreshToken.user_id == user_id,
-            RefreshToken.revoked == False
-        ).update({"revoked": True})
+        count = (
+            self.db.query(RefreshToken)
+            .filter(RefreshToken.user_id == user_id, RefreshToken.revoked == False)
+            .update({"revoked": True})
+        )
         self.db.commit()
         return count

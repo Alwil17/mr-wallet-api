@@ -29,13 +29,13 @@ class UserRepository:
         """
         hashed_pw = hash_password(user_data.password)
         user = User(
-            name=user_data.name, 
-            email=user_data.email, 
-            hashed_password=hashed_pw
+            name=user_data.name, email=user_data.email, hashed_password=hashed_pw
         )
 
         # Auto-assign admin role for admin emails in debug or test mode
-        if (settings.APP_DEBUG or settings.APP_ENV.lower() in ["test", "testing"]) and ("admin" in user_data.email):
+        if (settings.APP_DEBUG or settings.APP_ENV.lower() in ["test", "testing"]) and (
+            "admin" in user_data.email
+        ):
             user.role = "admin"
 
         self.db.add(user)
@@ -90,13 +90,13 @@ class UserRepository:
         user = self.get_by_id(user_id)
         if not user:
             return None
-        
+
         update_data = user_data.model_dump(exclude_unset=True)
-        
+
         # Hash the password if present
         if "password" in update_data and update_data["password"]:
             update_data["hashed_password"] = hash_password(update_data.pop("password"))
-        
+
         for key, value in update_data.items():
             setattr(user, key, value)
 
@@ -119,7 +119,7 @@ class UserRepository:
         user = self.get_by_id(user_id)
         if not user:
             return False
-            
+
         user.hashed_password = hash_password(new_password)
         user.updated_at = datetime.now()
         self.db.commit()

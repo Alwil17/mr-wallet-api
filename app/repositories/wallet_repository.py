@@ -31,7 +31,7 @@ class WalletRepository:
             name=wallet_data.name,
             type=wallet_data.type,
             balance=wallet_data.balance or Decimal("0.00"),
-            user_id=user_id
+            user_id=user_id,
         )
         self.db.add(wallet)
         self.db.commit()
@@ -61,11 +61,15 @@ class WalletRepository:
         Returns:
             Optional[Wallet]: The wallet if found and owned by user
         """
-        return self.db.query(Wallet).filter(
-            and_(Wallet.id == wallet_id, Wallet.user_id == user_id)
-        ).first()
+        return (
+            self.db.query(Wallet)
+            .filter(and_(Wallet.id == wallet_id, Wallet.user_id == user_id))
+            .first()
+        )
 
-    def get_user_wallets(self, user_id: int, skip: int = 0, limit: int = 100) -> List[Wallet]:
+    def get_user_wallets(
+        self, user_id: int, skip: int = 0, limit: int = 100
+    ) -> List[Wallet]:
         """
         Get all wallets for a user
 
@@ -77,9 +81,13 @@ class WalletRepository:
         Returns:
             List[Wallet]: List of user's wallets
         """
-        return self.db.query(Wallet).filter(
-            Wallet.user_id == user_id
-        ).offset(skip).limit(limit).all()
+        return (
+            self.db.query(Wallet)
+            .filter(Wallet.user_id == user_id)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     def count_user_wallets(self, user_id: int) -> int:
         """
@@ -167,24 +175,24 @@ class WalletRepository:
             dict: Summary information about user's wallets
         """
         wallets = self.get_user_wallets(user_id)
-        
+
         if not wallets:
             return {
                 "total_wallets": 0,
                 "total_balance": Decimal("0.00"),
                 "wallets_by_type": {},
-                "most_recent_wallet": None
+                "most_recent_wallet": None,
             }
 
         total_balance = sum(wallet.balance for wallet in wallets)
-        
+
         # Group by type
         wallets_by_type = {}
         for wallet in wallets:
             if wallet.type not in wallets_by_type:
                 wallets_by_type[wallet.type] = {
                     "count": 0,
-                    "total_balance": Decimal("0.00")
+                    "total_balance": Decimal("0.00"),
                 }
             wallets_by_type[wallet.type]["count"] += 1
             wallets_by_type[wallet.type]["total_balance"] += wallet.balance
@@ -196,7 +204,7 @@ class WalletRepository:
             "total_wallets": len(wallets),
             "total_balance": total_balance,
             "wallets_by_type": wallets_by_type,
-            "most_recent_wallet": most_recent
+            "most_recent_wallet": most_recent,
         }
 
     def get_wallets_by_type(self, user_id: int, wallet_type: str) -> List[Wallet]:
@@ -210,6 +218,8 @@ class WalletRepository:
         Returns:
             List[Wallet]: List of wallets of the specified type
         """
-        return self.db.query(Wallet).filter(
-            and_(Wallet.user_id == user_id, Wallet.type == wallet_type)
-        ).all()
+        return (
+            self.db.query(Wallet)
+            .filter(and_(Wallet.user_id == user_id, Wallet.type == wallet_type))
+            .all()
+        )
