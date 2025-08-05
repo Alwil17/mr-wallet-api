@@ -1,8 +1,9 @@
 from typing import List, Optional
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func, or_
+from app.constants import Constants
 from app.db.models.debt import Debt
 from app.db.models.wallet import Wallet
 from app.schemas.debt_dto import DebtCreateDTO, DebtUpdateDTO, DebtFilterDTO
@@ -153,7 +154,7 @@ class DebtRepository:
         """
         debt = self.get_by_id_and_user(debt_id, user_id)
         if not debt:
-            raise ValueError("Debt not found or not owned by user")
+            raise ValueError(Constants.DEBT_NOT_FOUND)
 
         # Update fields that are provided
         update_data = debt_data.model_dump(exclude_unset=True)
@@ -168,7 +169,7 @@ class DebtRepository:
         """Mark debt as paid or unpaid"""
         debt = self.get_by_id_and_user(debt_id, user_id)
         if not debt:
-            raise ValueError("Debt not found or not owned by user")
+            raise ValueError(Constants.DEBT_NOT_FOUND)
 
         debt.is_paid = is_paid
         self.db.commit()
@@ -191,7 +192,7 @@ class DebtRepository:
         """
         debt = self.get_by_id_and_user(debt_id, user_id)
         if not debt:
-            raise ValueError("Debt not found or not owned by user")
+            raise ValueError(Constants.DEBT_NOT_FOUND)
 
         self.db.delete(debt)
         self.db.commit()
