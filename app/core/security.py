@@ -5,6 +5,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from app.constants import Constants
 from app.core.config import settings
 from sqlalchemy.orm import Session
 from app.db.base import get_db
@@ -14,7 +15,7 @@ from app.schemas.user_dto import UserResponse
 
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Could not validate credentials",
+    detail=Constants.CREDENTIALS_INVALID,
     headers={"WWW-Authenticate": "Bearer"},
 )
 
@@ -121,14 +122,14 @@ def get_current_user_role(token: str = Depends(oauth2_scheme)) -> str:
         if role is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
+                detail=Constants.CREDENTIALS_INVALID,
                 headers={"WWW-Authenticate": "Bearer"},
             )
         return role
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
+            detail=Constants.CREDENTIALS_INVALID,
             headers={"WWW-Authenticate": "Bearer"},
         )
 
