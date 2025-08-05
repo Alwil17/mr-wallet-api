@@ -124,11 +124,11 @@ class WalletService:
             new_balance = current_balance + balance_update.amount
         elif balance_update.operation == "subtract":
             new_balance = current_balance - balance_update.amount
-            if new_balance < 0:
+            if new_balance < 0 and wallet.type != "credit":
                 raise ValueError(INSUFFICIENT_BALANCE)
         elif balance_update.operation == "set":
             new_balance = balance_update.amount
-            if new_balance < 0:
+            if new_balance < 0 and wallet.type != "credit":
                 raise ValueError("Balance cannot be negative")
         else:
             raise ValueError(INVALID_OPERATION)
