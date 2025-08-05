@@ -367,6 +367,11 @@ async def get_wallet_balance(
     wallet_service = WalletService(db)
     try:
         wallet = wallet_service.get_wallet_by_id(wallet_id, current_user.id)
+        if wallet is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Wallet not found"
+            )
         return {
             "balance": str(wallet.balance),
             "wallet_name": wallet.name
