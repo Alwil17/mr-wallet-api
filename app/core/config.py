@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
+from pydantic import ConfigDict, computed_field
 from typing import Optional
 
 
@@ -10,8 +10,18 @@ class Settings(BaseSettings):
         extra="ignore"  # Allow extra fields from .env file
     )
     
-    # Database
-    DATABASE_URL: str = "postgresql://user:password@localhost/mr_wallet_db"
+    # Database individual fields
+    DB_ENGINE: str = "postgresql"
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_NAME: str = "mr_wallet_db"
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str = "postgres"
+    
+    @computed_field
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"{self.DB_ENGINE}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
     
     # Security
     APP_SECRET_KEY: str = "your-secret-key-here-change-in-production"
