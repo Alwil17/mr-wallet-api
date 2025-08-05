@@ -35,7 +35,7 @@ class TestAuth:
         response = client.post("/auth/register", json=user_data)
         
         assert response.status_code == 400
-        assert "email already registered" in response.json()["detail"].lower()
+        assert "a user with this email already exists." in response.json()["detail"].lower()
 
     def test_register_user_invalid_data(self, client: TestClient):
         """Test registration with invalid data"""
