@@ -18,8 +18,7 @@ class Wallet(Base):
     # Relationships
     user = relationship("User", back_populates="wallets")
     transactions = relationship("Transaction", back_populates="wallet", cascade="all, delete-orphan")
-    # TODO: Uncomment when Debt model is implemented  
-    # debts = relationship("Debt", back_populates="wallet", cascade="all, delete-orphan")
+    debts = relationship("Debt", back_populates="wallet", cascade="all, delete-orphan")
     # TODO: Uncomment when Transfer model is implemented
     # source_transfers = relationship("Transfer", foreign_keys="Transfer.source_wallet_id", back_populates="source_wallet")
     # target_transfers = relationship("Transfer", foreign_keys="Transfer.target_wallet_id", back_populates="target_wallet")
