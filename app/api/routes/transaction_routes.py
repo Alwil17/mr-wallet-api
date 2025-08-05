@@ -321,4 +321,4 @@ def get_wallet_transactions(
     """
     service = TransactionService(db)
     transactions = service.get_transactions_by_wallet(wallet_id, current_user.id)
-    return [TransactionResponse.from_orm(t) for t in transactions]
+    return [TransactionResponse.model_validate(t) for t in transactions]
