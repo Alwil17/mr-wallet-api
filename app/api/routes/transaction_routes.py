@@ -72,7 +72,7 @@ def get_transactions(
     if date_from:
         filters.start_date = date_from
     if date_to:
-        filters.date_to = date_to
+        filters.end_date = date_to
     if amount_min:
         filters.amount_min = amount_min
     if amount_max:
