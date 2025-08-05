@@ -26,42 +26,42 @@
 ## ✅ Phase 3 — Wallet Management
 **Status: COMPLETED**
 
-- ✅ `Wallet` model with user relationships
-- ✅ Full CRUD operations: `GET`, `POST`, `PUT`, `DELETE /wallets`
-- ✅ User-specific wallet filtering and access control
-- ✅ Wallet types support (bank, cash, credit card, etc.)
-- ✅ Real-time balance calculation
-- ✅ Multi-wallet support per user
+- [x] `Wallet` model with user relationships
+- [x] Full CRUD operations: `GET`, `POST`, `PUT`, `DELETE /wallets`
+- [x] User-specific wallet filtering and access control
+- [x] Wallet types support (bank, cash, credit card, etc.)
+- [x] Real-time balance calculation
+- [x] Multi-wallet support per user
 
 ## ✅ Phase 4 — Transaction System
 **Status: COMPLETED**
 
-- ✅ `Transaction` model (income/expense tracking)
-- ✅ Transaction CRUD: `GET`, `POST`, `PUT`, `DELETE /transactions`
-- ✅ Wallet-specific transactions: `GET /wallets/{wallet_id}/transactions`
-- ✅ Advanced filtering: by type, date range, category, amount
-- ✅ Transaction categories and notes
-- ✅ Automatic wallet balance updates
+- [x] `Transaction` model (income/expense tracking)
+- [x] Transaction CRUD: `GET`, `POST`, `PUT`, `DELETE /transactions`
+- [x] Wallet-specific transactions: `GET /wallets/{wallet_id}/transactions`
+- [x] Advanced filtering: by type, date range, category, amount
+- [x] Transaction categories and notes
+- [x] Automatic wallet balance updates
 
 ## ✅ Phase 5 — File Attachment System
 **Status: COMPLETED**
 
-- ✅ `File` model for transaction attachments
-- ✅ File upload endpoint: `POST /transactions/{id}/files`
-- ✅ File storage implementation (local/cloud ready)
-- ✅ File access security and validation
-- ✅ File management: `GET /transactions/{id}/files`
-- ✅ Support for receipts, invoices, and documents
+- [x] `File` model for transaction attachments
+- [x] File upload endpoint: `POST /transactions/{id}/files`
+- [x] File storage implementation (local/cloud ready)
+- [x] File access security and validation
+- [x] File management: `GET /transactions/{id}/files`
+- [x] Support for receipts, invoices, and documents
 
 ## ✅ Phase 6 — Debt & Loan Management
 **Status: COMPLETED**
 
-- ✅ `Debt` model for tracking owed/lent money
-- ✅ Debt CRUD operations: `GET`, `POST`, `PATCH`, `DELETE /debts`
-- ✅ Wallet-specific debts: `GET /wallets/{id}/debts`
-- ✅ Debt status tracking (paid/unpaid)
-- ✅ Due date management and notifications
-- ✅ Borrower/lender information tracking
+- [] `Debt` model for tracking owed/lent money
+- [] Debt CRUD operations: `GET`, `POST`, `PATCH`, `DELETE /debts`
+- [] Wallet-specific debts: `GET /wallets/{id}/debts`
+- [] Debt status tracking (paid/unpaid)
+- [] Due date management and notifications
+- [] Borrower/lender information tracking
 
 ## ✅ Phase 7 — Inter-Wallet Transfers
 **Status: COMPLETED**
