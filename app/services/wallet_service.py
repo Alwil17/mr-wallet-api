@@ -147,12 +147,16 @@ class WalletService:
             bool: True if wallet was deleted
 
         Raises:
-            ValueError: If wallet not found or not owned by user
+            ValueError: If wallet not found or not owned by user, or if balance is not zero
         """
         # Verify ownership
         wallet = self.repository.get_by_id_and_user(wallet_id, user_id)
         if not wallet:
             raise ValueError(WALLET_NOT_FOUND)
+
+        # Check if balance is zero
+        if wallet.balance != 0:
+            raise ValueError("Wallet balance must be zero before deletion")
 
         return self.repository.delete(wallet_id)
 
