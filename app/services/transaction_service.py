@@ -248,46 +248,45 @@ class TransactionService:
             ValueError: If any validation fails
         """
         try:
-            transactions = []
-            
-            # Process each transaction
-            for transaction_data in bulk_data.transactions:
-                # Get wallet to check balance for expenses
-                wallet = self.wallet_repository.get_by_id(transaction_data.wallet_id, user_id)
-                if not wallet:
-                    raise ValueError(f"Wallet {transaction_data.wallet_id} not found")
-
-                # Check balance for expense transactions
-                if transaction_data.type.value == "expense":
-                    if wallet.type != "credit" and wallet.balance < transaction_data.amount:
-                        raise ValueError(f"Insufficient funds in wallet {wallet.name}")
-
-            # Create all transactions
+            self._validate_bulk_transactions(bulk_data.transactions, user_id)
             created_transactions = self.transaction_repository.bulk_create(bulk_data.transactions, user_id)
-
-            # Update wallet balances
-            wallet_balance_changes = {}
-            for transaction in created_transactions:
-                wallet_id = transaction.wallet_id
-                if wallet_id not in wallet_balance_changes:
-                    wallet_balance_changes[wallet_id] = Decimal("0")
-
-                if transaction.type.value == "income":
-                    wallet_balance_changes[wallet_id] += transaction.amount
-                else:
-                    wallet_balance_changes[wallet_id] -= transaction.amount
-
-            # Apply balance changes
-            for wallet_id, balance_change in wallet_balance_changes.items():
-                wallet = self.wallet_repository.get_by_id(wallet_id, user_id)
-                wallet.balance += balance_change
-
+            self._apply_bulk_wallet_balance_changes(created_transactions, user_id)
             self.db.commit()
             return created_transactions
 
         except Exception as e:
             self.db.rollback()
             raise e
+
+    def _validate_bulk_transactions(self, transactions, user_id: int):
+        """
+        Validate wallets and balances for bulk transactions.
+        """
+        for transaction_data in transactions:
+            wallet = self.wallet_repository.get_by_id(transaction_data.wallet_id, user_id)
+            if not wallet:
+                raise ValueError(f"Wallet {transaction_data.wallet_id} not found")
+            if transaction_data.type.value == "expense":
+                if wallet.type != "credit" and wallet.balance < transaction_data.amount:
+                    raise ValueError(f"Insufficient funds in wallet {wallet.name}")
+
+    def _apply_bulk_wallet_balance_changes(self, created_transactions: List[Transaction], user_id: int):
+        """
+        Apply wallet balance changes for bulk created transactions.
+        """
+        wallet_balance_changes = {}
+        for transaction in created_transactions:
+            wallet_id = transaction.wallet_id
+            if wallet_id not in wallet_balance_changes:
+                wallet_balance_changes[wallet_id] = Decimal("0")
+            if transaction.type.value == "income":
+                wallet_balance_changes[wallet_id] += transaction.amount
+            else:
+                wallet_balance_changes[wallet_id] -= transaction.amount
+
+        for wallet_id, balance_change in wallet_balance_changes.items():
+            wallet = self.wallet_repository.get_by_id(wallet_id, user_id)
+            wallet.balance += balance_change
 
     def add_file_to_transaction(self, file: UploadFile, transaction_id: int, file_type: FileType, user_id: int) -> File:
         """
