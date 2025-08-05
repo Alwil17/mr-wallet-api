@@ -559,7 +559,7 @@ class TestDebtManagement:
             "amount": 300.00,
             "borrower": "Rachel",
             "type": "owed",
-            "due_date": (datetime.utcnow() + timedelta(days=10)).isoformat(),
+            "due_date": (datetime.now(timezone.utc) + timedelta(days=10)).isoformat(),
             "wallet_id": test_wallet["id"]
         }
         
