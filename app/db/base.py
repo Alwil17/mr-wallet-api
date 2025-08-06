@@ -1,7 +1,7 @@
 from sqlalchemy import URL, create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from app.db.models.base import Base
-import app.db.models # Load models from the common module
+import app.db.models  # Load models from the common module
 from app.core.config import settings
 import os
 
@@ -63,4 +63,3 @@ def get_db():
 
 # Créer les tables au démarrage
 init_db()
-
