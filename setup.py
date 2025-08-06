@@ -41,7 +41,7 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 
 # Application
 APP_NAME=Mr Wallet API
-APP_VERSION=1.0.0
+APP_VERSION=1.0.1
 APP_DEBUG=true
 APP_ENV=development
 
