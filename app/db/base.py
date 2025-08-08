@@ -1,9 +1,12 @@
+from dotenv import load_dotenv
 from sqlalchemy import URL, create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from app.db.models.base import Base
 import app.db.models  # Load models from the common module
 from app.core.config import settings
 import os
+
+load_dotenv()
 
 # Check if we're running in test mode
 is_test = os.environ.get("APP_ENV") == "test"
