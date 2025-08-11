@@ -1,7 +1,7 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from decimal import Decimal
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union, Any
 from app.db.models.transaction import TransactionType, TransactionCategory
 from app.db.models.file import FileType
 
@@ -73,6 +73,20 @@ class TransactionResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
     files: List[FileResponse] = []
+    
+    @field_validator('user_category', mode='before')
+    @classmethod
+    def validate_user_category(cls, v):
+        if v is None:
+            return None
+        # If it's already a dict, return as-is
+        if isinstance(v, dict):
+            return v
+        # If it's a SQLAlchemy model, convert to dict
+        if hasattr(v, '__dict__'):
+            from app.schemas.category_dto import CategoryResponse
+            return CategoryResponse.model_validate(v).model_dump()
+        return v
 
 
 class TransactionListResponse(BaseModel):
