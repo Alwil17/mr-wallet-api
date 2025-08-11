@@ -43,14 +43,8 @@ class TransactionRepository:
             raise ValueError("Wallet not found or not owned by user")
 
         # Support either enum category or user-defined category_id
-        category = (
-            transaction_data.category if hasattr(transaction_data, "category") else None
-        )
-        category_id = (
-            transaction_data.category_id
-            if hasattr(transaction_data, "category_id")
-            else None
-        )
+        category = getattr(transaction_data, "category", None)
+        category_id = getattr(transaction_data, "category_id", None)
 
         if not category and not category_id:
             raise ValueError("Either category or category_id must be provided")
