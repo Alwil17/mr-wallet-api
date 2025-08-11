@@ -30,19 +30,8 @@ class TransactionRepository:
         self, transaction_data: TransactionCreateDTO, user_id: int
     ) -> Transaction:
         """
-        Create a new transaction
-
-        Args:
-            transaction_data (TransactionCreateDTO): The transaction data
-            user_id (int): The user ID (for ownership verification)
-
-        Returns:
-            Transaction: The created transaction
-
-        Raises:
-            ValueError: If wallet not found or not owned by user
+        Create a new transaction (supports enum or user-defined category)
         """
-        # Verify wallet ownership
         wallet = (
             self.db.query(Wallet)
             .filter(
@@ -50,20 +39,53 @@ class TransactionRepository:
             )
             .first()
         )
-
         if not wallet:
             raise ValueError("Wallet not found or not owned by user")
+
+        # Support either enum category or user-defined category_id
+        category = transaction_data.category if hasattr(transaction_data, 'category') else None
+        category_id = transaction_data.category_id if hasattr(transaction_data, 'category_id') else None
+
+        if not category and not category_id:
+            raise ValueError("Either category or category_id must be provided")
 
         transaction = Transaction(
             type=transaction_data.type,
             amount=transaction_data.amount,
-            category=transaction_data.category,
+            category=category,
+            category_id=category_id,
             note=transaction_data.note,
             date=transaction_data.date or datetime.now(),
             wallet_id=transaction_data.wallet_id,
         )
-
         self.db.add(transaction)
+        self.db.commit()
+        self.db.refresh(transaction)
+        return transaction
+
+    def update(
+        self, transaction_id: int, update_data: TransactionUpdateDTO, user_id: int
+    ) -> Optional[Transaction]:
+        """
+        Update a transaction (supports enum or user-defined category)
+        """
+        transaction = self.get_by_id(transaction_id, user_id)
+        if not transaction:
+            return None
+
+        for field in ["type", "amount", "note", "date"]:
+            value = getattr(update_data, field, None)
+            if value is not None:
+                setattr(transaction, field, value)
+
+        # Handle category/category_id
+        if hasattr(update_data, "category") and update_data.category is not None:
+            transaction.category = update_data.category
+            transaction.category_id = None
+        if hasattr(update_data, "category_id") and update_data.category_id is not None:
+            transaction.category_id = update_data.category_id
+            transaction.category = None
+
         self.db.commit()
         self.db.refresh(transaction)
         return transaction
