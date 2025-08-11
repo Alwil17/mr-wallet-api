@@ -3,6 +3,7 @@ from app.repositories.category_repository import CategoryRepository
 from app.schemas.category_dto import CategoryCreateDTO, CategoryUpdateDTO
 from typing import List
 
+
 class CategoryService:
     def __init__(self, db: Session):
         self.repo = CategoryRepository(db)
