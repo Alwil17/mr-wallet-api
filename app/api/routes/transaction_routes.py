@@ -47,8 +47,6 @@ def create_transaction(
         transaction = service.create_transaction(transaction_data, current_user.id)
         resp = TransactionResponse.model_validate(transaction)
         if getattr(transaction, "user_category", None):
-            from app.schemas.category_dto import CategoryResponse
-
             resp.user_category = CategoryResponse.model_validate(
                 transaction.user_category
             )
