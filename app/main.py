@@ -9,6 +9,7 @@ from app.api.routes import (
     transaction_routes,
     debt_routes,
     transfer_routes,
+    category_routes,
 )
 
 # Define tags metadata for Swagger documentation
@@ -85,6 +86,7 @@ app.include_router(wallet_routes.router)
 app.include_router(transaction_routes.router)
 app.include_router(debt_routes.router)
 app.include_router(transfer_routes.router)
+app.include_router(category_routes.router)
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

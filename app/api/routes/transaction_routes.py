@@ -16,6 +16,7 @@ from app.core.security import get_current_user
 from app.db.base import get_db
 from app.db.models.user import User
 from app.db.models.file import FileType
+from app.schemas.category_dto import CategoryResponse
 from app.services.transaction_service import TransactionService
 from app.schemas.transaction_dto import (
     TransactionCreateDTO,
@@ -45,7 +46,12 @@ def create_transaction(
     service = TransactionService(db)
     try:
         transaction = service.create_transaction(transaction_data, current_user.id)
-        return TransactionResponse.model_validate(transaction)
+        resp = TransactionResponse.model_validate(transaction)
+        if getattr(transaction, "user_category", None):
+            resp.user_category = CategoryResponse.model_validate(
+                transaction.user_category
+            )
+        return resp
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -53,6 +59,7 @@ def create_transaction(
 @router.get("/", response_model=TransactionListResponse)
 def get_transactions(
     filters: TransactionFilterDTO = Depends(),
+    category_id: Optional[int] = Query(None, description="User-defined category ID"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     sort_by: str = Query("date"),
@@ -63,6 +70,8 @@ def get_transactions(
     """
     Get user's transactions with filtering and pagination
     """
+    if category_id:
+        filters.category_id = category_id
     service = TransactionService(db)
     return service.get_user_transactions(
         current_user.id, filters, skip, limit, sort_by, sort_order
@@ -117,7 +126,12 @@ def get_transaction(
             detail=Constants.TRANSACTION_NOT_FOUND,
         )
 
-    return TransactionResponse.model_validate(transaction)
+    resp = TransactionResponse.model_validate(transaction)
+    if getattr(transaction, "user_category", None):
+        from app.schemas.category_dto import CategoryResponse
+
+        resp.user_category = CategoryResponse.model_validate(transaction.user_category)
+    return resp
 
 
 @router.put("/{transaction_id}", response_model=TransactionResponse)
@@ -135,15 +149,19 @@ def update_transaction(
         transaction = service.update_transaction(
             transaction_id, update_data, current_user.id
         )
-
         if not transaction:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=Constants.TRANSACTION_NOT_FOUND,
             )
+        resp = TransactionResponse.model_validate(transaction)
+        if getattr(transaction, "user_category", None):
+            from app.schemas.category_dto import CategoryResponse
 
-        return TransactionResponse.model_validate(transaction)
-
+            resp.user_category = CategoryResponse.model_validate(
+                transaction.user_category
+            )
+        return resp
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
