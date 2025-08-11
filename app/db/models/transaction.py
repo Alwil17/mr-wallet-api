@@ -1,3 +1,4 @@
+import sqlalchemy as sa
 from sqlalchemy import (
     Column,
     Integer,
@@ -56,7 +57,8 @@ class Transaction(Base):
     id = Column(Integer, primary_key=True, index=True)
     type = Column(Enum(TransactionType), nullable=False, index=True)
     amount = Column(Numeric(10, 2), nullable=False)
-    category = Column(Enum(TransactionCategory), nullable=False, index=True)
+    category = Column(Enum(TransactionCategory), nullable=True, index=True)
+    category_id = Column(Integer, sa.ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
     note = Column(Text, nullable=True)
     date = Column(DateTime(timezone=True), nullable=False, default=func.now())
 
@@ -69,11 +71,13 @@ class Transaction(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+
     # Relationships
     wallet = relationship("Wallet", back_populates="transactions")
     files = relationship(
         "File", back_populates="transaction", cascade="all, delete-orphan"
     )
+    user_category = relationship("Category", foreign_keys=[category_id])
 
     def __repr__(self):
         return f"<Transaction(id={self.id}, type={self.type}, amount={self.amount}, category={self.category})>"
