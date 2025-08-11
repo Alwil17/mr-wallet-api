@@ -140,7 +140,7 @@ class TransactionRepository:
 
         total = query.count()
         transactions = (
-            query.options(joinedload(Transaction.files)).offset(skip).limit(limit).all()
+            query.options(joinedload(Transaction.files), joinedload(Transaction.user_category)).offset(skip).limit(limit).all()
         )
         total_pages = (total + limit - 1) // limit
         current_page = (skip // limit) + 1
