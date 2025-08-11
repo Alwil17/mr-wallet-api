@@ -48,7 +48,10 @@ def create_transaction(
         resp = TransactionResponse.model_validate(transaction)
         if getattr(transaction, "user_category", None):
             from app.schemas.category_dto import CategoryResponse
-            resp.user_category = CategoryResponse.model_validate(transaction.user_category)
+
+            resp.user_category = CategoryResponse.model_validate(
+                transaction.user_category
+            )
         return resp
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -127,6 +130,7 @@ def get_transaction(
     resp = TransactionResponse.model_validate(transaction)
     if getattr(transaction, "user_category", None):
         from app.schemas.category_dto import CategoryResponse
+
         resp.user_category = CategoryResponse.model_validate(transaction.user_category)
     return resp
 
@@ -154,7 +158,10 @@ def update_transaction(
         resp = TransactionResponse.model_validate(transaction)
         if getattr(transaction, "user_category", None):
             from app.schemas.category_dto import CategoryResponse
-            resp.user_category = CategoryResponse.model_validate(transaction.user_category)
+
+            resp.user_category = CategoryResponse.model_validate(
+                transaction.user_category
+            )
         return resp
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
