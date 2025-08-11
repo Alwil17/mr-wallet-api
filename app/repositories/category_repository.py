@@ -2,11 +2,18 @@ from sqlalchemy.orm import Session
 from app.db.models.category import Category
 from typing import List, Optional
 
+
 class CategoryRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, name: str, user_id: int, color: Optional[str] = None, icon: Optional[str] = None) -> Category:
+    def create(
+        self,
+        name: str,
+        user_id: int,
+        color: Optional[str] = None,
+        icon: Optional[str] = None,
+    ) -> Category:
         category = Category(name=name, user_id=user_id, color=color, icon=icon)
         self.db.add(category)
         self.db.commit()
@@ -17,7 +24,11 @@ class CategoryRepository:
         return self.db.query(Category).filter(Category.user_id == user_id).all()
 
     def get_by_id(self, category_id: int, user_id: int) -> Optional[Category]:
-        return self.db.query(Category).filter(Category.id == category_id, Category.user_id == user_id).first()
+        return (
+            self.db.query(Category)
+            .filter(Category.id == category_id, Category.user_id == user_id)
+            .first()
+        )
 
     def update(self, category_id: int, user_id: int, **kwargs) -> Optional[Category]:
         category = self.get_by_id(category_id, user_id)

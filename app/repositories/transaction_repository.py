@@ -43,8 +43,14 @@ class TransactionRepository:
             raise ValueError("Wallet not found or not owned by user")
 
         # Support either enum category or user-defined category_id
-        category = transaction_data.category if hasattr(transaction_data, 'category') else None
-        category_id = transaction_data.category_id if hasattr(transaction_data, 'category_id') else None
+        category = (
+            transaction_data.category if hasattr(transaction_data, "category") else None
+        )
+        category_id = (
+            transaction_data.category_id
+            if hasattr(transaction_data, "category_id")
+            else None
+        )
 
         if not category and not category_id:
             raise ValueError("Either category or category_id must be provided")
@@ -140,7 +146,12 @@ class TransactionRepository:
 
         total = query.count()
         transactions = (
-            query.options(joinedload(Transaction.files), joinedload(Transaction.user_category)).offset(skip).limit(limit).all()
+            query.options(
+                joinedload(Transaction.files), joinedload(Transaction.user_category)
+            )
+            .offset(skip)
+            .limit(limit)
+            .all()
         )
         total_pages = (total + limit - 1) // limit
         current_page = (skip // limit) + 1
