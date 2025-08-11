@@ -15,8 +15,12 @@ class TransactionCreateDTO(BaseModel):
     amount: Decimal = Field(
         ..., gt=0, description="Transaction amount (must be positive)"
     )
-    category: Optional[TransactionCategory] = Field(None, description="Transaction category (enum)")
-    category_id: Optional[int] = Field(None, description="User-defined category ID (optional)")
+    category: Optional[TransactionCategory] = Field(
+        None, description="Transaction category (enum)"
+    )
+    category_id: Optional[int] = Field(
+        None, description="User-defined category ID (optional)"
+    )
     note: Optional[str] = Field(
         None, max_length=1000, description="Optional note or description"
     )
@@ -34,7 +38,9 @@ class TransactionUpdateDTO(BaseModel):
     category: Optional[TransactionCategory] = Field(
         None, description="Transaction category (enum)"
     )
-    category_id: Optional[int] = Field(None, description="User-defined category ID (optional)")
+    category_id: Optional[int] = Field(
+        None, description="User-defined category ID (optional)"
+    )
     note: Optional[str] = Field(
         None, max_length=1000, description="Note or description"
     )
@@ -73,8 +79,8 @@ class TransactionResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
     files: List[FileResponse] = []
-    
-    @field_validator('user_category', mode='before')
+
+    @field_validator("user_category", mode="before")
     @classmethod
     def validate_user_category(cls, v):
         if v is None:
@@ -83,8 +89,9 @@ class TransactionResponse(BaseModel):
         if isinstance(v, dict):
             return v
         # If it's a SQLAlchemy model, convert to dict
-        if hasattr(v, '__dict__'):
+        if hasattr(v, "__dict__"):
             from app.schemas.category_dto import CategoryResponse
+
             return CategoryResponse.model_validate(v).model_dump()
         return v
 
