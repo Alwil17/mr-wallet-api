@@ -1,4 +1,5 @@
 # Import all models here to ensure they are registered with SQLAlchemy
+
 from app.db.models.user import User
 from app.db.models.refresh_token import RefreshToken
 from app.db.models.wallet import Wallet
@@ -6,6 +7,7 @@ from app.db.models.transaction import Transaction, TransactionType, TransactionC
 from app.db.models.file import File, FileType
 from app.db.models.debt import Debt
 from app.db.models.transfer import Transfer
+from app.db.models.category import Category
 
 __all__ = [
     "User",
@@ -18,4 +20,5 @@ __all__ = [
     "FileType",
     "Debt",
     "Transfer",
+    "Category",
 ]
