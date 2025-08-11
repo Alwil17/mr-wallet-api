@@ -185,6 +185,7 @@ class TestTransactions:
 
         assert response.status_code == 200
         data = response.json()
+
     # (Removed misplaced assertions from class level. All logic is now inside test methods.)
 
     def test_get_transactions_with_filters(
