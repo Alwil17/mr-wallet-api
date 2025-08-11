@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.models.base import Base
 
+
 class Category(Base):
     __tablename__ = "categories"
 
@@ -9,7 +10,9 @@ class Category(Base):
     name = Column(String(100), nullable=False)
     color = Column(String(20), nullable=True)
     icon = Column(String(50), nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
 
     user = relationship("User", back_populates="categories")
 

@@ -58,7 +58,9 @@ class Transaction(Base):
     type = Column(Enum(TransactionType), nullable=False, index=True)
     amount = Column(Numeric(10, 2), nullable=False)
     category = Column(Enum(TransactionCategory), nullable=True, index=True)
-    category_id = Column(Integer, sa.ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
+    category_id = Column(
+        Integer, sa.ForeignKey("categories.id", ondelete="SET NULL"), nullable=True
+    )
     note = Column(Text, nullable=True)
     date = Column(DateTime(timezone=True), nullable=False, default=func.now())
 
@@ -70,7 +72,6 @@ class Transaction(Base):
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
 
     # Relationships
     wallet = relationship("Wallet", back_populates="transactions")
